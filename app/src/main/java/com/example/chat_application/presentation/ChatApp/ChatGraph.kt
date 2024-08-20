@@ -8,9 +8,9 @@ import com.example.chat_application.presentation.Authentication.AuthenticationRo
 
 @Composable
 fun ChatGraph(navController: NavHostController){
-    NavHost(navController = navController, startDestination = AuthenticationRoutes.Login.route) {
-        composable(AuthenticationRoutes.Login.route){ AllChatsComposable(navController = navController) }
-        composable(AuthenticationRoutes.SignUp.route){ RequestedChatsComposable(navController = navController) }
+    NavHost(navController = navController, startDestination = ChatRoutes.AllChats.route) {
+        composable(ChatRoutes.AllChats.route){ AllChatsComposable(navController = navController) }
+        composable(ChatRoutes.RequestedChats.route){ RequestedChatsComposable(navController = navController) }
     }
 }
 

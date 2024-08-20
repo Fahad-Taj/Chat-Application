@@ -33,15 +33,15 @@ fun getTypography(primaryFontResId: Int): Typography{
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
             letterSpacing = 1.5.sp
-        )
-        /* Other default text styles to override
+        ),
         titleLarge = TextStyle(
-            fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Normal,
+            fontFamily = FontFamily(Font(primaryFontResId)),
+            fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
             lineHeight = 28.sp,
-            letterSpacing = 0.sp
+            letterSpacing = 2.sp
         ),
+    /* Other default text styles to override
         labelSmall = TextStyle(
             fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Medium,

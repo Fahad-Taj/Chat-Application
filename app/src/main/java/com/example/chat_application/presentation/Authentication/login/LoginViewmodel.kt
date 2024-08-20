@@ -11,12 +11,17 @@ import com.example.chat_application.ui.theme.opensans_font
 import com.example.chat_application.ui.theme.primary_font
 import com.example.chat_application.util.NetworkConnectivityChecker
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.Response
 
 class LoginViewmodel: ViewModel() {
 
     private val _state = mutableStateOf(LoginScreenState())
     val state: State<LoginScreenState> = _state
+
+    // Change this later to be the LoginResponse object
+    val response = MutableStateFlow<String?>(null)
 
     val username = mutableStateOf("")
     val password = mutableStateOf("")
@@ -40,6 +45,9 @@ class LoginViewmodel: ViewModel() {
                 isWaiting.value = true
                 // delay to simulate network request
                 delay(1000)
+                response.value = "Success"
+
+
                 isWaiting.value = false
             } catch(e: Exception){
                 e.printStackTrace()

@@ -25,6 +25,8 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.chat_application.presentation.Authentication.AuthenticationRoutes
+import com.example.chat_application.presentation.Root_graph_routes
 import com.example.chat_application.ui.theme.primary_font
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,10 +58,17 @@ fun LoginComposable(
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
 
+    val response by viewModel.response.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(key1 = viewModel.state.value.hasInternetConnection) {
         viewModel.checkInternetConnection(context, lifecycleOwner)
+    }
+
+    LaunchedEffect(key1 = response) {
+        if(response != null){
+            navController.navigate(Root_graph_routes.MainScreenRoute.route)
+        }
     }
 
     if(!viewModel.state.value.hasInternetConnection){
