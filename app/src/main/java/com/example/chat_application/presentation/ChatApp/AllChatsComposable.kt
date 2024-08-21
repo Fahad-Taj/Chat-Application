@@ -20,6 +20,10 @@ fun AllChatsComposable(navController: NavHostController){
     }
 }
 
+@Composable
+fun SingleUserRow(){
+
+}
 
 @Composable
 fun RequestedChatsComposable(navController: NavHostController){
