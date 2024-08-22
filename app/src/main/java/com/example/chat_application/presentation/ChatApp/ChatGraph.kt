@@ -8,8 +8,11 @@ import com.example.chat_application.presentation.Authentication.AuthenticationRo
 
 @Composable
 fun ChatGraph(navController: NavHostController){
+
+    val allChatViewModel = AllChatViewModel()
+
     NavHost(navController = navController, startDestination = ChatRoutes.AllChats.route) {
-        composable(ChatRoutes.AllChats.route){ AllChatsComposable(navController = navController) }
+        composable(ChatRoutes.AllChats.route){ AllChatsComposable(navController = navController, viewModel = allChatViewModel) }
         composable(ChatRoutes.RequestedChats.route){ RequestedChatsComposable(navController = navController) }
     }
 }

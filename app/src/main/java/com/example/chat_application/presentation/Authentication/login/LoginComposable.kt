@@ -1,5 +1,6 @@
 package com.example.chat_application.presentation.Authentication.login
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -65,11 +66,20 @@ fun LoginComposable(
         viewModel.checkInternetConnection(context, lifecycleOwner)
     }
 
+    LaunchedEffect(key1 = viewModel.error_message.value){
+        if(viewModel.error_message.value != ""){
+            Toast.makeText(context, viewModel.error_message.value, Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
     LaunchedEffect(key1 = response) {
         if(response != null){
             navController.navigate(Root_graph_routes.MainScreenRoute.route)
         }
     }
+
+
 
     if(!viewModel.state.value.hasInternetConnection){
         Column(

@@ -1,28 +1,116 @@
 package com.example.chat_application.presentation.ChatApp
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.chat_application.api.RetrofitInstance
+import com.example.chat_application.models.UserItem
+import com.example.chat_application.util.user_details
 
 @Composable
-fun AllChatsComposable(navController: NavHostController){
+fun AllChatsComposable(
+    navController: NavHostController,
+    viewModel: AllChatViewModel
+    ){
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)
+            .verticalScroll(rememberScrollState()),
     ) {
-        Text(text = "All Chats Screen")
+        val userList by viewModel.userList.collectAsState()
+
+        LaunchedEffect(key1 = Unit) {
+            viewModel.get_users()
+        }
+
+        if(viewModel.isLoading.value){
+            CircularProgressIndicator()
+        } else {
+            userList.forEach { it->
+                Surface(
+                    modifier = Modifier
+                        .shadow(9.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                ) {
+                    SingleUserRow(user = it)
+                }
+                Spacer(modifier = Modifier.height(5.dp))
+
+            }
+        }
+
     }
 }
 
 @Composable
-fun SingleUserRow(){
+fun SingleUserRow(
+    user: UserItem
+){
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+            .padding(10.dp)
+            .wrapContentHeight(Alignment.CenterVertically),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color.Green),
+            contentAlignment = Alignment.Center
+        ){
+            Icon(modifier = Modifier.fillMaxSize(), imageVector = Icons.Default.AccountCircle, contentDescription = null, tint = Color.White)
+        }
+        Spacer(modifier = Modifier.width(20.dp))
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .wrapContentHeight(Alignment.CenterVertically),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = user.username, style = MaterialTheme.typography.labelSmall)
+            Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null, tint = Color.Black)
+        }
+    }
 }
 
 @Composable

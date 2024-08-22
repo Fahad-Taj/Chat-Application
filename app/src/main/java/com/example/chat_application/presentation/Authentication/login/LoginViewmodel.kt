@@ -1,15 +1,19 @@
 package com.example.chat_application.presentation.Authentication.login
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chat_application.api.RetrofitInstance
+import com.example.chat_application.models.LoginResponse
 import com.example.chat_application.ui.theme.matemasie_font
 import com.example.chat_application.ui.theme.opensans_font
 import com.example.chat_application.ui.theme.primary_font
 import com.example.chat_application.util.NetworkConnectivityChecker
+import com.example.chat_application.util.user_details
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -21,10 +25,12 @@ class LoginViewmodel: ViewModel() {
     val state: State<LoginScreenState> = _state
 
     // Change this later to be the LoginResponse object
-    val response = MutableStateFlow<String?>(null)
+    val response = MutableStateFlow<LoginResponse?>(null)
 
     val username = mutableStateOf("")
     val password = mutableStateOf("")
+
+    val error_message = mutableStateOf("")
 
     var isWaiting = mutableStateOf(false)
 
@@ -43,10 +49,16 @@ class LoginViewmodel: ViewModel() {
         viewModelScope.launch {
             try {
                 isWaiting.value = true
-                // delay to simulate network request
-                delay(1000)
-                response.value = "Success"
 
+                val result = RetrofitInstance.api.login(username.value, password.value)
+                if(result.isSuccessful){
+                    response.value = result.body()
+                    user_details = result.body()
+                    error_message.value = ""
+                } else {
+                    Log.e("error encountered", result.message())
+                    error_message.value = result.message()
+                }
 
                 isWaiting.value = false
             } catch(e: Exception){
