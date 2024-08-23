@@ -1,5 +1,6 @@
 package com.example.chat_application.api
 
+import com.example.chat_application.models.DirectChatsResponse
 import com.example.chat_application.models.LoginResponse
 import com.example.chat_application.models.RegisterResponse
 import com.example.chat_application.models.UserItem
@@ -8,6 +9,7 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface api{
 
@@ -30,5 +32,8 @@ interface api{
 
     @GET("/users")
     suspend fun getUsers(): Response<List<UserItem>>
+
+    @GET("/chats/direct")
+    suspend fun getDirectChats(): Response<DirectChatsResponse>
 
 }

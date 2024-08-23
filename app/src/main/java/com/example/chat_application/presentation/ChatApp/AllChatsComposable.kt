@@ -1,6 +1,8 @@
 package com.example.chat_application.presentation.ChatApp
 
+import android.os.Bundle
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +41,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.chat_application.api.RetrofitInstance
+import com.example.chat_application.models.Chat
+import com.example.chat_application.models.User
 import com.example.chat_application.models.UserItem
 import com.example.chat_application.util.user_details
 
@@ -53,22 +57,22 @@ fun AllChatsComposable(
             .padding(10.dp)
             .verticalScroll(rememberScrollState()),
     ) {
-        val userList by viewModel.userList.collectAsState()
+        val chatList by viewModel.chatList.collectAsState()
 
         LaunchedEffect(key1 = Unit) {
-            viewModel.get_users()
+            viewModel.getDirectChats()
         }
 
         if(viewModel.isLoading.value){
             CircularProgressIndicator()
         } else {
-            userList.forEach { it->
+            chatList.forEach { it->
                 Surface(
                     modifier = Modifier
                         .shadow(9.dp)
                         .clip(RoundedCornerShape(10.dp))
                 ) {
-                    SingleUserRow(user = it)
+                    SingleUserRow(chat = it, navController = navController, viewModel = viewModel)
                 }
                 Spacer(modifier = Modifier.height(5.dp))
 
@@ -80,14 +84,27 @@ fun AllChatsComposable(
 
 @Composable
 fun SingleUserRow(
-    user: UserItem
+    chat: Chat,
+    navController: NavHostController,
+    viewModel: AllChatViewModel
 ){
+    val user: User = chat.users[1]
+    val bundle = Bundle().apply {
+        putSerializable("chat", chat)
+    }
+    navController.navigate(ChatRoutes.ChatScreen.route) {
+        arguments = bundle
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp)
             .padding(10.dp)
-            .wrapContentHeight(Alignment.CenterVertically),
+            .wrapContentHeight(Alignment.CenterVertically)
+            .clickable {
+                viewModel.selectedScreen = chat
+                navController.navigate(ChatRoutes.ChatScreen.route)
+            },
     ) {
         Box(
             modifier = Modifier

@@ -2,8 +2,12 @@ package com.example.chat_application.presentation.ChatApp
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.example.chat_application.models.Chat
+import com.example.chat_application.models.User
 import com.example.chat_application.presentation.Authentication.AuthenticationRoutes
 
 @Composable
@@ -14,11 +18,21 @@ fun ChatGraph(navController: NavHostController){
     NavHost(navController = navController, startDestination = ChatRoutes.AllChats.route) {
         composable(ChatRoutes.AllChats.route){ AllChatsComposable(navController = navController, viewModel = allChatViewModel) }
         composable(ChatRoutes.RequestedChats.route){ RequestedChatsComposable(navController = navController) }
+        composable(
+            ChatRoutes.ChatScreen.route,
+            arguments = listOf(navArgument("chat") {
+                type = NavType.SerializableType(Chat::class.java)
+            })
+        ) { backStackEntry ->
+            val chat = backStackEntry.arguments?.getSerializable("chat") as Chat
+            ChatScreen(chat = chat, navController = navController)
+        }
     }
 }
 
 sealed class ChatRoutes(val route: String, val title: String){
     object AllChats: ChatRoutes(route = "splash", title = "splash route")
     object RequestedChats: ChatRoutes(route = "login", title = "login route")
+    object ChatScreen: ChatRoutes(route = "chat", title = "chat route")
     object Settings: ChatRoutes(route = "signup", title = "signup route")
 }
