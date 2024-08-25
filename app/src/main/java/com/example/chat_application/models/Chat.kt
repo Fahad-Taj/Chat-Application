@@ -9,4 +9,4 @@ data class Chat(
     val new_messages_count: Int,
     val updated_at: String,
     val users: List<User>
-): Serializable
+)

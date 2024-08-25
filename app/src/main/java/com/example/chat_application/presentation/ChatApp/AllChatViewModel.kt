@@ -11,13 +11,14 @@ import com.example.chat_application.util.user_details
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-class AllChatViewModel: ViewModel() {
+class ChatViewModel: ViewModel() {
 
     val chatList = MutableStateFlow<List<Chat>>(emptyList())
     var error_message = mutableStateOf("")
     var isLoading = mutableStateOf(true)
 
     var selectedScreen: Chat? = null
+    var msg = mutableStateOf("")
 
     fun getDirectChats(){
         viewModelScope.launch {

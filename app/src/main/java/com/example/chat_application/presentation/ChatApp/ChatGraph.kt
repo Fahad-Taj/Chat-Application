@@ -1,6 +1,7 @@
 package com.example.chat_application.presentation.ChatApp
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -11,22 +12,17 @@ import com.example.chat_application.models.User
 import com.example.chat_application.presentation.Authentication.AuthenticationRoutes
 
 @Composable
-fun ChatGraph(navController: NavHostController){
+fun ChatGraph(
+    chatViewModel: ChatViewModel,
+    navController: NavHostController
+){
 
-    val allChatViewModel = AllChatViewModel()
+    val ChatViewModel: ChatViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = ChatRoutes.AllChats.route) {
-        composable(ChatRoutes.AllChats.route){ AllChatsComposable(navController = navController, viewModel = allChatViewModel) }
+        composable(ChatRoutes.AllChats.route){ AllChatsComposable(navController = navController, viewModel = chatViewModel) }
         composable(ChatRoutes.RequestedChats.route){ RequestedChatsComposable(navController = navController) }
-        composable(
-            ChatRoutes.ChatScreen.route,
-            arguments = listOf(navArgument("chat") {
-                type = NavType.SerializableType(Chat::class.java)
-            })
-        ) { backStackEntry ->
-            val chat = backStackEntry.arguments?.getSerializable("chat") as Chat
-            ChatScreen(chat = chat, navController = navController)
-        }
+        composable(ChatRoutes.ChatScreen.route) { ChatScreen(navController = navController, viewModel = chatViewModel) }
     }
 }
 
