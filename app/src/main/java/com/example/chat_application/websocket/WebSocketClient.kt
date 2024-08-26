@@ -1,5 +1,6 @@
 package com.example.chat_application.websocket
 
+import android.util.Log
 import androidx.compose.runtime.*
 import com.example.chat_application.api.RetrofitInstance
 import kotlinx.coroutines.*
@@ -69,8 +70,13 @@ class WebSocketClient(url: String) {
         })
     }
 
-    fun sendMessage(message: String) {
-        webSocket.send(message)
+    fun sendMessage(message: String):Boolean{
+        return try {
+            webSocket.send(message)==true
+        }catch (e:Exception){
+            Log.e("WebSocketClient", "Error sending message: ${e.message}")
+            false
+        }
     }
 
     fun disconnect() {

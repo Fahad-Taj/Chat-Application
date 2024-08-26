@@ -1,11 +1,15 @@
 package com.example.chat_application.presentation.ChatApp
 
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,8 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,55 +38,98 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.chat_application.models.Chat
+import androidx.navigation.compose.rememberNavController
+import com.example.chat_application.models.Message
 import com.example.chat_application.models.User
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatScreen(
-    viewModel: ChatViewModel,
-    navController: NavHostController
-){
+    viewModel: ChatViewModel, navController: NavHostController
+) {
     Log.e("Chat from chat screen", viewModel.selectedScreen.toString())
     val chat = viewModel.selectedScreen
+    val messages = viewModel.messages.collectAsState()
     val sender = chat?.users?.get(0)
+    val chat_guid = chat?.chat_guid
     val receiver = chat?.users?.get(1)
-
 
     BackHandler {
         viewModel.selectedScreen = null
         navController.navigate(ChatRoutes.AllChats.route)
     }
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            receiver?.let {
-                TopBar(it)
-            }
-        },
-        bottomBar = {
-            BottomBar(viewModel = viewModel)
-        }
-    ) { paddingValues ->
-        // All communication will take place here
-        LazyColumn(
-            modifier = Modifier.padding(paddingValues)
-        ) {
-            
+    LaunchedEffect(Unit) {
+        viewModel.connectWebSocket()
+        if(chat_guid!=null){
+            viewModel.getMessages(chat_guid)
         }
     }
-}
+
+    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
+        receiver?.let {
+            TopBar(it)
+        }
+    }, bottomBar = {
+        if (chat_guid != null && sender?.guid != null) {
+            BottomBar(viewModel = viewModel, sender.guid, chat_guid)
+        }
+    }) { paddingValues ->
+        // All communication will take place here
+        LazyColumn(
+            modifier = Modifier
+                .padding(paddingValues)
+                .background(Color.Red)
+        ) {
+            // zoned time
+            var last_date=""
+            val displayFormatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+            val zonedDateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
+
+            val sorted_messages=messages.value.messages.sortedBy {
+                val formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
+                ZonedDateTime.parse(it.created_at, formatter)
+            }
+
+
+            items(sorted_messages) { message ->
+
+                val isSender:Boolean= message.user_guid==sender?.guid
+
+                val messageDate = ZonedDateTime.parse(message.created_at, zonedDateTimeFormatter)
+                val formattedDate = messageDate.format(displayFormatter)
+
+                if(last_date !=formattedDate){
+                    Text(text = formattedDate,
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                    last_date=formattedDate
+                }
+
+                MessageItem(message,isSender)
+            }
+        }
+    }}
+
 
 @Composable
-fun TopBar(user: User){
+fun TopBar(user: User) {
     Surface(
         modifier = Modifier.shadow(9.dp)
     ) {
@@ -98,12 +145,13 @@ fun TopBar(user: User){
                     .size(40.dp)
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
-            ){
-                Icon(modifier = Modifier
-                    .fillMaxSize(),
+            ) {
+                Icon(
+                    modifier = Modifier,
                     imageVector = Icons.Filled.AccountCircle,
                     contentDescription = null,
-                    tint = Color.Black)
+                    tint = Color.Black
+                )
             }
 
             Spacer(modifier = Modifier.width(40.dp))
@@ -124,12 +172,13 @@ fun TopBar(user: User){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomBar(viewModel: ChatViewModel){
+fun BottomBar(viewModel: ChatViewModel, user_guid: String, chatGuid: String) {
     HorizontalDivider()
     Row(
         modifier = Modifier
+            .padding(10.dp)
             .fillMaxWidth()
-            .height(60.dp),
+            .height(50.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -145,7 +194,14 @@ fun BottomBar(viewModel: ChatViewModel){
         )
 
         Icon(
-            modifier = Modifier.height(30.dp).width(60.dp),
+            modifier = Modifier
+                .height(30.dp)
+                .width(60.dp)
+                .clickable {
+                    if (viewModel.msg.value.isNotBlank()) {
+                        viewModel.sendMessage(viewModel.msg.value, user_guid, chatGuid)
+                    }
+                },
             imageVector = Icons.Filled.ArrowForward,
             contentDescription = null,
             tint = Color.Black
@@ -154,17 +210,33 @@ fun BottomBar(viewModel: ChatViewModel){
 
 
 }
-
 @Preview(showBackground = true, showSystemUi = true)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TopBarPreview(){
-    TopBar(
-        user = User(
-            username = "John",
-            first_name = "John",
-            last_name = "Doe",
-            user_image = "John banega don",
-            guid = "John Jio"
-        ))
+fun TopBarPreview() {
+    ChatScreen(viewModel = ChatViewModel(), navController = rememberNavController())
 
+}
+@Composable
+fun MessageItem(message: Message,isSender:Boolean) {
+    val alignment = if (isSender==true) {
+        Alignment.End // Align to the end for sender
+    } else {
+        Alignment.Start // Align to the start for receiver
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp), // Adjust padding as needed
+        horizontalAlignment = alignment
+    ) {
+        Text(
+            text = message.content,
+            modifier = Modifier
+                .background(if (isSender) Color.Blue else Color.Gray) // Different background color
+                .padding(8.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .align(alignment) // Align the text based on sender or receiver
+        )
+    }
 }

@@ -1,6 +1,10 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
+    id("androidx.room")
+
 }
 
 android {
@@ -47,9 +51,14 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    room{
+        schemaDirectory("$projectDir/schemas")
+    }
+
 }
 
 dependencies {
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -92,5 +101,30 @@ dependencies {
 
     // OkHttp Logging Interceptor
     implementation ("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+
+    //moshi
+    implementation ("com.squareup.moshi:moshi:1.12.0")
+    implementation ("com.squareup.moshi:moshi-kotlin:1.12.0")
+    implementation ("com.squareup.moshi:moshi-adapters:1.12.0")
+
+    //datastore
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    val room_version = "2.6.1"
+
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    // hilt
+    implementation ("com.google.dagger:hilt-android:2.51.1")
+
+    kapt("com.google.dagger:hilt-compiler:2.51.1")
+    annotationProcessor ("com.google.dagger:hilt-compiler:2.51.1")
+
+
+
+
 
 }

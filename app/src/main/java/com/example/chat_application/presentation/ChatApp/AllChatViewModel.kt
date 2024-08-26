@@ -1,26 +1,91 @@
 package com.example.chat_application.presentation.ChatApp
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chat_application.api.RetrofitInstance
 import com.example.chat_application.models.Chat
+import com.example.chat_application.models.LastReadMessage
+import com.example.chat_application.models.Messages
 import com.example.chat_application.models.User
 import com.example.chat_application.models.UserItem
 import com.example.chat_application.util.user_details
+import com.example.chat_application.websocket.WebSocketClient
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
-class ChatViewModel: ViewModel() {
+class ChatViewModel : ViewModel() {
+
+    private val webSocketEcho = WebSocketClient("ws://192.168.0.106:8001/ws/")
+    private val moshi: Moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+
+    private val sendMessageAdapter = moshi.adapter(SendMessageSchema::class.java)
+
 
     val chatList = MutableStateFlow<List<Chat>>(emptyList())
+
+    val messageList = MutableStateFlow<List<Messages>>(emptyList())
+
     var error_message = mutableStateOf("")
+
     var isLoading = mutableStateOf(true)
 
     var selectedScreen: Chat? = null
     var msg = mutableStateOf("")
 
-    fun getDirectChats(){
+    private val _messages = MutableStateFlow(
+        Messages(
+            has_more_messages = false,
+            last_read_message = LastReadMessage("", "", ""),
+            messages = emptyList()
+        )
+    )
+
+    val messages: StateFlow<Messages> = _messages.asStateFlow()
+
+    //connect to a web socket
+    fun connectWebSocket() {
+        viewModelScope.launch {
+            webSocketEcho.connect()
+        }
+    }
+
+
+    //get previous chats from pagination
+    fun getMessages(chatGuid: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+            try {
+                Log.e("chat guid", chatGuid)
+                val response = RetrofitInstance.api.getMessages(chatGuid, 20)
+                if (response.isSuccessful) {
+                    val result = response.body()
+                    _messages.value = (result ?: listOf(null)) as Messages
+                } else {
+                    Log.e("getMessages", "Error: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.e("getMessages", "Exception: ${e.message}")
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+
+    //chat details we can get it from here like
+    fun getDirectChats() {
         viewModelScope.launch {
             try {
                 isLoading.value = true
@@ -28,12 +93,40 @@ class ChatViewModel: ViewModel() {
                 chatList.value = result.body()?.chats ?: emptyList()
                 isLoading.value = false
 
-            } catch(e: Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
-        }
+            }
         }
     }
 
+    //send the message to
+    fun sendMessage(message: String, userGuid: String, chatGuid: String) {
+        viewModelScope.launch {
+            val newMessage = SendMessageSchema(
+                user_guid = userGuid,
+                chat_guid = chatGuid,
+                content = message
+            )
+            val jsonMessage = sendMessageAdapter.toJson(newMessage)
+            Log.d("WebSocket", "Sending message: $jsonMessage")
+            val success = webSocketEcho.sendMessage(jsonMessage)
+            if (success) {
+                msg.value = ""  // Reset the msg value after sending the message
+            } else {
+                Log.e("WebSocket", "Failed to send message")
+            }
+        }
+    }
+
+    //update the text each time
 
 
 }
+
+@JsonClass(generateAdapter = true)
+data class SendMessageSchema(
+    val type: String = "new_message",
+    val user_guid: String,
+    val chat_guid: String,
+    val content: String,
+)

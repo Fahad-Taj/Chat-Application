@@ -13,6 +13,7 @@ import com.example.chat_application.ui.theme.matemasie_font
 import com.example.chat_application.ui.theme.opensans_font
 import com.example.chat_application.ui.theme.primary_font
 import com.example.chat_application.util.NetworkConnectivityChecker
+import com.example.chat_application.util.access_token
 import com.example.chat_application.util.user_details
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,9 +50,9 @@ class LoginViewmodel: ViewModel() {
         viewModelScope.launch {
             try {
                 isWaiting.value = true
-
                 val result = RetrofitInstance.api.login(username.value, password.value)
                 if(result.isSuccessful){
+                    access_token  = RetrofitInstance.tokenInterceptor.getSessionCookie()
                     response.value = result.body()
                     user_details = result.body()
                     error_message.value = ""

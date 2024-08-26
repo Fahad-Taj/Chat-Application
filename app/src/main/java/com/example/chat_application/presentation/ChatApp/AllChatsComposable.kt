@@ -42,9 +42,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.chat_application.R
 import com.example.chat_application.api.RetrofitInstance
 import com.example.chat_application.models.Chat
@@ -56,7 +59,7 @@ import com.example.chat_application.util.user_details
 fun AllChatsComposable(
     navController: NavHostController,
     viewModel: ChatViewModel
-    ){
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -64,16 +67,18 @@ fun AllChatsComposable(
             .verticalScroll(rememberScrollState()),
     ) {
         val chatList by viewModel.chatList.collectAsState()
+        // we can eaily get the count here but how can we update it in the real time that is the problem maybe socket htemselves do that
+//        val new_message_count=chatList.size.
 
         LaunchedEffect(key1 = Unit) {
             viewModel.getDirectChats()
             viewModel.selectedScreen = null
         }
 
-        if(viewModel.isLoading.value){
+        if (viewModel.isLoading.value) {
             CircularProgressIndicator()
         } else {
-            chatList.forEach { it->
+            chatList.forEach { it ->
                 Surface(
                     modifier = Modifier
                         .shadow(9.dp)
@@ -96,7 +101,7 @@ fun SingleUserRow(
     viewModel: ChatViewModel,
     isTyping: MutableState<Boolean> = mutableStateOf(true),
     isActive: MutableState<Boolean> = mutableStateOf(true)
-){
+) {
     val user: User = chat.users[1]
 
     Row(
@@ -116,8 +121,13 @@ fun SingleUserRow(
                 .clip(CircleShape)
                 .background(Color.Green),
             contentAlignment = Alignment.Center
-        ){
-            Icon(modifier = Modifier.fillMaxSize(), imageVector = Icons.Default.AccountCircle, contentDescription = null, tint = Color.White)
+        ) {
+            Icon(
+                modifier = Modifier.fillMaxSize(),
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = null,
+                tint = Color.White
+            )
         }
         Spacer(modifier = Modifier.width(20.dp))
 
@@ -133,7 +143,7 @@ fun SingleUserRow(
             ) {
                 Column {
                     Text(text = user.username, style = MaterialTheme.typography.labelSmall)
-                    if(isTyping.value){
+                    if (isTyping.value) {
                         Text(
                             text = "is Typing ...",
                             color = Color(0xff2F6030),
@@ -142,21 +152,27 @@ fun SingleUserRow(
                         )
                     }
                 }
-                if(isActive.value){
+                if (isActive.value) {
                     Spacer(modifier = Modifier.width(20.dp))
-                    Box(modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(Color.Green), )
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(Color.Green),
+                    )
                 }
             }
-            Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null, tint = Color.Black)
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = null,
+                tint = Color.Black
+            )
         }
     }
 }
 
 @Composable
-fun RequestedChatsComposable(navController: NavHostController){
+fun RequestedChatsComposable(navController: NavHostController) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -164,4 +180,10 @@ fun RequestedChatsComposable(navController: NavHostController){
     ) {
         Text(text = "Requested Chats Screen")
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun Preview() {
+    AllChatsComposable(navController = rememberNavController(), viewModel = ChatViewModel())
 }

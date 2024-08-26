@@ -11,6 +11,7 @@ import com.example.chat_application.api.RetrofitInstance
 import com.example.chat_application.models.RegisterResponse
 import com.example.chat_application.presentation.Authentication.login.LoginScreenState
 import com.example.chat_application.util.NetworkConnectivityChecker
+import com.example.chat_application.util.access_token
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -57,6 +58,7 @@ class SignupViewmodel: ViewModel() {
                     email = email.value
                 )
                 if(result.isSuccessful){
+                    access_token=RetrofitInstance.tokenInterceptor.getSessionCookie()
                     response.value = result.body()
                     error_message.value = ""
                 } else {

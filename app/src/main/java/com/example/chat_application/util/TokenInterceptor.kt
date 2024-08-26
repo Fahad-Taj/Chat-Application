@@ -4,41 +4,29 @@ import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class TokenInterceptor : Interceptor {
-    var accessToken: String? = null
-        private set
+class TokenInterceptor() : Interceptor {
+    private var sessionCookie: String? = null
+
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        // Add the access token to outgoing requests if available
-        val newRequest = if (accessToken != null) {
-            originalRequest.newBuilder()
-                .addHeader("Cookie", "access_token=$accessToken")
-                .addHeader("accept", "application/json")
-                .build()
-        } else {
-            originalRequest
+        val requestBuilder = originalRequest.newBuilder()
+
+        sessionCookie?.let {
+            requestBuilder.addHeader("Cookie", it)
         }
 
-        Log.e("New request", newRequest.toString())
-        val response = chain.proceed(newRequest)
+        val response = chain.proceed(requestBuilder.build())
 
-        // Extract the token from incoming responses
-        val cookies = response.headers("set-cookie")
-        for (cookie in cookies) {
-            if (cookie.startsWith("access_token=")) {
-                accessToken = extractAccessToken(cookie)
-                Log.e("Token found", accessToken.toString())
-                break
-            }
+        response.headers("set-cookie").firstOrNull { it.startsWith("access_token=") }?.let {
+            sessionCookie = it.split(";").first()
+            access_token= sessionCookie!!.split("=")[1]
+            Log.e("accrss", access_token.toString())
         }
 
         return response
     }
+    fun getSessionCookie(): String? = sessionCookie
 
-    private fun extractAccessToken(cookie: String): String {
-        val tokenPart = cookie.split(";")[0]
-        return tokenPart.substringAfter("access_token=")
-    }
 }
