@@ -75,7 +75,9 @@ fun ChatScreen(
 
     BackHandler {
         viewModel.selectedScreen = null
-        navController.navigate(ChatRoutes.AllChats.route)
+        navController.navigate(ChatRoutes.AllChats.route){
+            popUpTo(ChatRoutes.AllChats.route){inclusive = true}
+        }
     }
 
     DisposableEffect(key1 = Unit) {
@@ -131,7 +133,7 @@ fun ChatScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(paddingValues)
-                .background(Color.Red)
+                .background(Color(0xffD3D3D3))
         ) {
             // zoned time
             var last_date = ""
@@ -184,7 +186,7 @@ fun TopBar(user: User) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(45.dp)
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -204,7 +206,7 @@ fun TopBar(user: User) {
                     .wrapContentHeight(Alignment.CenterVertically),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = user.username, style = MaterialTheme.typography.labelSmall)
+                Text(text = user.username)
             }
 
         }
@@ -263,24 +265,32 @@ fun TopBarPreview() {
 
 @Composable
 fun MessageItem(message: Message, isSender: Boolean) {
-    val alignment = if (isSender == true) {
+    Log.e("From message item: Message", message.content.toString())
+    Log.e("From message item: isSender", isSender.toString())
+    val alignment = if (isSender) {
         Alignment.End // Align to the end for sender
     } else {
         Alignment.Start // Align to the start for receiver
     }
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp), // Adjust padding as needed
-        horizontalAlignment = alignment
+        horizontalArrangement = if (isSender) {
+            Arrangement.End // Align to the end for sender
+        } else {
+            Arrangement.Start // Align to the start for receiver
+        }
     ) {
-        Text(
-            text = message.content,
-            modifier = Modifier
-                .background(if (isSender) Color.Blue else Color.Gray) // Different background color
-                .padding(8.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .align(alignment) // Align the text based on sender or receiver
-        )
+        Surface(
+            modifier = Modifier.shadow(5.dp)
+        ) {
+            Text(
+                text = message.content,
+                modifier = Modifier // Different background color
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp)) // Align the text based on sender or receiver
+            )
+        }
     }
 }

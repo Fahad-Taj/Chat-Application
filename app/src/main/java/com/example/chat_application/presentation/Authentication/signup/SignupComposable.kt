@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -97,6 +99,7 @@ fun SignUpComposable(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .navigationBarsPadding()
                 .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -111,104 +114,55 @@ fun SignUpComposable(
             ) {
 
                 // First Name field
-                TextField(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, Color.Blue, RoundedCornerShape(12.dp)),
+                OutlinedTextField(
                     value = viewModel.firstName.value,
                     onValueChange = {
                         viewModel.firstName.value = it
                     },
-                    textStyle = MaterialTheme.typography.labelSmall,
-                    label = { Text("First Name", style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("First Name") },
                     //visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    colors = TextFieldDefaults.textFieldColors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
                 )
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(15.dp))
 
                 // Last Name field
-                TextField(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, Color.Blue, RoundedCornerShape(12.dp)),
+                OutlinedTextField(
                     value = viewModel.lastName.value,
                     onValueChange = {
                         viewModel.lastName.value = it
                     },
-                    textStyle = MaterialTheme.typography.labelSmall,
-                    label = { Text("Last Name", style = MaterialTheme.typography.labelSmall) },
-                    //visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    colors = TextFieldDefaults.textFieldColors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
+                    label = { Text("Last Name") },
                 )
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(15.dp))
 
                 // Username text field
-                TextField(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, Color.Blue, RoundedCornerShape(12.dp)),
+                OutlinedTextField(
                     value = viewModel.username.value,
                     onValueChange = {
                         viewModel.username.value = it
                     },
-                    textStyle = MaterialTheme.typography.labelSmall,
-                    label = { Text("Username", style = MaterialTheme.typography.labelSmall) },
-                    colors = TextFieldDefaults.textFieldColors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
-
+                    label = { Text("Username") },
                 )
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(15.dp))
 
                 // Email text field
-                TextField(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, Color.Blue, RoundedCornerShape(12.dp)),
+                OutlinedTextField(
                     value = viewModel.email.value,
                     onValueChange = {
                         viewModel.email.value = it
                     },
-                    textStyle = MaterialTheme.typography.labelSmall,
-                    label = { Text("Email", style = MaterialTheme.typography.labelSmall) },
-                    colors = TextFieldDefaults.textFieldColors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
-
+                    label = { Text("Email") },
                 )
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(15.dp))
 
                 // Password text field
-                TextField(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, Color.Blue, RoundedCornerShape(12.dp)),
+                OutlinedTextField(
                     value = viewModel.password.value,
                     onValueChange = {
                         viewModel.password.value = it
                     },
-                    label = { Text("Password", style = MaterialTheme.typography.labelSmall) },
+                    label = { Text("Password") },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    colors = TextFieldDefaults.textFieldColors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
                 )
                 Spacer(modifier = Modifier.height(30.dp))
 
@@ -218,11 +172,11 @@ fun SignUpComposable(
                         .height(70.dp)
                         .width(170.dp)
                         .padding(10.dp),
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(4.dp),
                     onClick = { viewModel.register() }
                 ) {
                     if(!viewModel.isWaiting.value){
-                        Text(text = "Signup", style = MaterialTheme.typography.labelSmall)
+                        Text(text = "Signup")
                     } else {
                         CircularProgressIndicator(modifier = Modifier.size(30.dp),color = Color.White)
                     }
@@ -232,11 +186,10 @@ fun SignUpComposable(
 
                 // Text to navigate
                 Row {
-                    Text(text = "Already have an account?  ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Text(text = "Already have an account?  ")
                     Text(
                         text = "Login",
                         color = Color.Blue,
-                        fontFamily = FontFamily(Font(primary_font.value)),
                         modifier = Modifier.clickable {
                             navController.navigate(AuthenticationRoutes.Login.route){
                                 popUpTo(AuthenticationRoutes.SignUp.route){ inclusive = true }
@@ -252,7 +205,7 @@ fun SignUpComposable(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .background(Color.Blue),
+                    .background(Color.Black),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -260,7 +213,6 @@ fun SignUpComposable(
                     text = "Chat Application",
                     fontSize = 20.sp,
                     color = Color.White,
-                    fontFamily = FontFamily(Font(primary_font.value))
                 )
             }
 

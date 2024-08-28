@@ -1,6 +1,8 @@
 package com.example.chat_application.presentation.ChatApp
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
@@ -30,9 +33,11 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
@@ -42,6 +47,7 @@ import com.example.chat_application.R
 import com.example.chat_application.presentation.Root_graph_routes
 import kotlin.math.log
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainChatScreen(navController: NavHostController){
 
@@ -61,12 +67,13 @@ fun MainChatScreen(navController: NavHostController){
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp)
-                .background(Color.Blue),
+                .height(100.dp)
+                .background(Color.Black)
+                .padding(top = 40.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Chat Application", style = MaterialTheme.typography.titleLarge, color = Color.White)
+            Text(text = "Chat Application", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
 
         // Row containing the tabs
@@ -91,7 +98,6 @@ fun MainChatScreen(navController: NavHostController){
                             .wrapContentSize(Alignment.Center)
                             .clickable { navController.navigate(ChatRoutes.AllChats.route) },
                         text = "All",
-                        fontFamily = FontFamily(Font(R.font.matemasie_regular)),
                         textDecoration = if(selectedAll)   TextDecoration.Underline else TextDecoration.None
                     )
 
@@ -103,7 +109,6 @@ fun MainChatScreen(navController: NavHostController){
                             .wrapContentSize(Alignment.Center)
                             .clickable { navController.navigate(ChatRoutes.RequestedChats.route) },
                         text = "Requested",
-                        fontFamily = FontFamily(Font(R.font.matemasie_regular)),
                         textDecoration = if(selectedRequested)   TextDecoration.Underline else TextDecoration.None
                     )
                 }
@@ -117,6 +122,7 @@ fun MainChatScreen(navController: NavHostController){
 
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MainChatScreenPreview(){

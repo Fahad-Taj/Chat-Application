@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -107,7 +108,7 @@ fun SingleUserRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
+            .height(65.dp)
             .padding(10.dp)
             .wrapContentHeight(Alignment.CenterVertically)
             .clickable {
@@ -119,7 +120,7 @@ fun SingleUserRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(Color.Green),
+                .background(Color(0xff00008B)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -142,12 +143,11 @@ fun SingleUserRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = user.username, style = MaterialTheme.typography.labelSmall)
+                    Text(text = user.username, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     if (isTyping.value) {
                         Text(
                             text = "is Typing ...",
                             color = Color(0xff2F6030),
-                            fontFamily = FontFamily(Font(R.font.matemasie_regular)),
                             fontSize = 10.sp
                         )
                     }

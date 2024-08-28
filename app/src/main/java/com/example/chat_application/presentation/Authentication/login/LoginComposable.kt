@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -37,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -94,6 +97,7 @@ fun LoginComposable(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .navigationBarsPadding()
                 .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -107,42 +111,23 @@ fun LoginComposable(
                 verticalArrangement = Arrangement.Center
             ) {
                 // Username text field
-                TextField(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, Color.Blue, RoundedCornerShape(12.dp)),
+                OutlinedTextField(
                     value = viewModel.username.value,
                     onValueChange = {
                         viewModel.username.value = it
                     },
-                    textStyle = MaterialTheme.typography.labelSmall,
-                    label = { Text("Username / Email", style = MaterialTheme.typography.labelSmall) },
-                    colors = TextFieldDefaults.textFieldColors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
-
+                    label = { Text("Username / Email", fontWeight = FontWeight.SemiBold) }
                 )
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+
 
                 // Password text field
-                TextField(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, Color.Blue, RoundedCornerShape(12.dp)),
+                OutlinedTextField(
                     value = viewModel.password.value,
                     onValueChange = {
                         viewModel.password.value = it
                     },
-                    label = { Text("Password", style = MaterialTheme.typography.labelSmall) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    colors = TextFieldDefaults.textFieldColors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
+                    label = { Text("Password", fontWeight = FontWeight.SemiBold) }
                 )
                 Spacer(modifier = Modifier.height(30.dp))
 
@@ -152,11 +137,11 @@ fun LoginComposable(
                         .height(70.dp)
                         .width(170.dp)
                         .padding(10.dp),
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(4.dp),
                     onClick = { viewModel.login() }
                 ) {
                     if(!viewModel.isWaiting.value){
-                        Text(text = "Login", style = MaterialTheme.typography.labelSmall)
+                        Text(text = "Login")
                     } else {
                         CircularProgressIndicator(modifier = Modifier.size(30.dp),color = Color.White)
                     }
@@ -166,11 +151,10 @@ fun LoginComposable(
                 
                 // Text to navigate
                 Row {
-                    Text(text = "Don't have an account?  ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Text(text = "Don't have an account?  ", color = MaterialTheme.colorScheme.primary)
                     Text(
                         text = "Sign Up",
                         color = Color.Blue,
-                        fontFamily = FontFamily(Font(primary_font.value)),
                         modifier = Modifier.clickable {
                             navController.navigate(AuthenticationRoutes.SignUp.route){
                                 popUpTo(AuthenticationRoutes.Login.route){inclusive = true}
@@ -178,19 +162,6 @@ fun LoginComposable(
                     })
 
                 }
-                
-                // Button to change font
-                Button(
-                    modifier = Modifier
-                        .height(70.dp)
-                        .width(190.dp)
-                        .padding(10.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    onClick = { viewModel.change_font() }
-                ) {
-                    Text(text = "Change Font", style = MaterialTheme.typography.labelSmall)
-                }
-                
             }
 
             // Column containing the logo at the bottom of the screen
@@ -198,7 +169,7 @@ fun LoginComposable(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .background(Color.Blue),
+                    .background(Color.Black),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -206,7 +177,6 @@ fun LoginComposable(
                     text = "Chat Application",
                     fontSize = 20.sp,
                     color = Color.White,
-                    fontFamily = FontFamily(Font(primary_font.value))
                 )
             }
 
