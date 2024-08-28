@@ -1,5 +1,7 @@
 package com.example.chat_application.presentation.ChatApp
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -11,13 +13,12 @@ import com.example.chat_application.models.Chat
 import com.example.chat_application.models.User
 import com.example.chat_application.presentation.Authentication.AuthenticationRoutes
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatGraph(
     chatViewModel: ChatViewModel,
     navController: NavHostController
 ){
-
-    val ChatViewModel: ChatViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = ChatRoutes.AllChats.route) {
         composable(ChatRoutes.AllChats.route){ AllChatsComposable(navController = navController, viewModel = chatViewModel) }

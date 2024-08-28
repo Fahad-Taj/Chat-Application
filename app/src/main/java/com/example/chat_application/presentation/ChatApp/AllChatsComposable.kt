@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -74,7 +75,6 @@ fun AllChatsComposable(
             viewModel.getDirectChats()
             viewModel.selectedScreen = null
         }
-
         if (viewModel.isLoading.value) {
             CircularProgressIndicator()
         } else {

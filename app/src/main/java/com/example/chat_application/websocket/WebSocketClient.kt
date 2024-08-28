@@ -3,7 +3,14 @@ package com.example.chat_application.websocket
 import android.util.Log
 import androidx.compose.runtime.*
 import com.example.chat_application.api.RetrofitInstance
+import com.example.chat_application.models.OnReceived.WebSocketMessage
+import com.example.chat_application.presentation.ChatApp.ChatViewModel
+import com.example.chat_application.util.web_socket
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import okhttp3.*
 import okio.ByteString
 
@@ -30,56 +37,110 @@ import okio.ByteString
 // Now we can use the WebSocketClient class' objects to create connection, we will use WebSocketClient.sendMessage() and WebSocketClient.disconnect()
 // methods to manage the webSocket connection
 
-class WebSocketClient(url: String) {
+class WebSocketClient() {
     private val client = RetrofitInstance.client
-    //private val client = OkHttpClient()
     private lateinit var webSocket: WebSocket
-    private val request = Request.Builder().url(url).build()
+    private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
 
-    // MutableState for receiving messages
-    var receivedMessage by mutableStateOf("")
 
-    fun connect() {
+    private val _receivedMessages = MutableStateFlow<WebSocketMessage?>(null)
+    val receivedMessages: StateFlow<WebSocketMessage?> = _receivedMessages
+
+
+    private val _connectionStatus = MutableStateFlow("disconnected")
+    val connectionStatus: StateFlow<String> get() = _connectionStatus
+
+    fun connect(url: String) {
+
+        val request = Request.Builder().url(url).build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
+
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                println("Connected to WebSocket server")
+                Log.e("OnOpen", "Connected to WebSocket server")
+                _connectionStatus.value = "connected"
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                println("Received message: $text")
-                // Update the state when a new message is received
-                receivedMessage = text
+                Log.e("onMessage", "Received message: $text")
+                val jsonAdapter = moshi.adapter(Map::class.java)
+                val messageMap = jsonAdapter.fromJson(text)!!
+                when (messageMap["type"]) {
+                    "new" -> {
+                        val newMessage =
+                            moshi.adapter(WebSocketMessage.NewMessage::class.java).fromJson(text)!!
+                        _receivedMessages.value = newMessage
+                        Log.e("receivedMessage", _receivedMessages.value.toString())
+                    }
+
+                    "user_typing" -> {
+                        val userTyping =
+                            moshi.adapter(WebSocketMessage.UserTyping::class.java).fromJson(text)!!
+                        _receivedMessages.value = userTyping
+                        Log.e("receivedMessage", _receivedMessages.value.toString())
+                    }
+
+                    "status" -> {
+                        val status = moshi.adapter(WebSocketMessage.StatusMessage::class.java)
+                            .fromJson(text)!!
+                        _receivedMessages.value = status
+                        Log.e("receivedMessage", _receivedMessages.value.toString())
+                    }
+
+                    "message_read" -> {
+                        val message_read =
+                            moshi.adapter(WebSocketMessage.MessageRead::class.java).fromJson(text)!!
+                        _receivedMessages.value = message_read
+                        Log.e("receivedMessage", _receivedMessages.value.toString())
+                    }
+                }
+//                Log.e("Received",_receivedMessages.value)
             }
 
             override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-                println("Received ByteString message: $bytes")
+                Log.e("OnMessage", "Received ByteString message: $bytes")
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                println("Closing WebSocket: $code / $reason")
+                Log.e("onClosing", "Closing WebSocket: $code / $reason")
                 webSocket.close(1000, null)
+                _connectionStatus.value = "disconnected"
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                println("WebSocket closed: $code / $reason")
+                Log.e("onClosed", "WebSocket closed: $code / $reason")
+                _connectionStatus.value = "disconnected"
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                println("WebSocket connection failed: ${t.message}")
+                Log.e("onFailure", "WebSocket connection failed: ${t.message}")
+                _connectionStatus.value = "disconnected"
+                reconnect()
             }
         })
     }
 
-    fun sendMessage(message: String):Boolean{
+    fun sendMessage(message: String): Boolean {
         return try {
-            webSocket.send(message)==true
-        }catch (e:Exception){
+            webSocket.send(message) == true
+            //also update the msg here
+        } catch (e: Exception) {
             Log.e("WebSocketClient", "Error sending message: ${e.message}")
             false
         }
     }
 
     fun disconnect() {
-        webSocket.close(1000, "Client disconnected")
+        if (::webSocket.isInitialized) {
+            webSocket.close(1000, "Client disconnected")
+            _connectionStatus.value = "disconnected"
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun reconnect() {
+        GlobalScope.launch {
+            delay(2000) // Delay for 2 seconds before attempting to reconnect
+            connect(web_socket)
+        }
     }
 }

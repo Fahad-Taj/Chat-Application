@@ -38,8 +38,10 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.chat_application.models.Message
+import com.example.chat_application.models.OnReceived.WebSocketMessage
 import com.example.chat_application.models.User
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
@@ -68,13 +71,21 @@ fun ChatScreen(
     val chat_guid = chat?.chat_guid
     val receiver = chat?.users?.get(1)
 
+    val receivedMessage by viewModel.receivedMessages.collectAsState()
+
     BackHandler {
         viewModel.selectedScreen = null
         navController.navigate(ChatRoutes.AllChats.route)
     }
+
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            viewModel.disconnectWebSocket()
+        }
+    }
     LaunchedEffect(Unit) {
         viewModel.connectWebSocket()
-        if(chat_guid!=null){
+        if (chat_guid != null) {
             viewModel.getMessages(chat_guid)
         }
     }
@@ -88,44 +99,75 @@ fun ChatScreen(
             BottomBar(viewModel = viewModel, sender.guid, chat_guid)
         }
     }) { paddingValues ->
-        // All communication will take place here
+//        // All communication will take place here
+//        Column {
+//            when (receivedMessage) {
+//                is WebSocketMessage.NewMessage -> {
+//                    val message = receivedMessage as WebSocketMessage.NewMessage
+//                    Log.e("receivedMessage",message.content)
+//                }
+//
+//                is WebSocketMessage.UserTyping -> {
+//                    val typing = receivedMessage as WebSocketMessage.UserTyping
+//                    Log.e("receivedMessage",typing.type)
+//
+//                }
+//
+//                is WebSocketMessage.StatusMessage -> {
+//                    val status = receivedMessage as WebSocketMessage.StatusMessage
+//                    Log.e("receivedMessage",status.status)
+//                }
+//
+//                is WebSocketMessage.MessageRead -> {
+//                    val MessageRead = receivedMessage as WebSocketMessage.MessageRead
+//                    Log.e("receivedMessage",MessageRead.last_read_message_guid)
+//
+//                }
+//                null -> {
+//                    Log.e("receivedMessage","null")
+//                }
+//            }
+//        }
         LazyColumn(
             modifier = Modifier
                 .padding(paddingValues)
                 .background(Color.Red)
         ) {
             // zoned time
-            var last_date=""
+            var last_date = ""
             val displayFormatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
             val zonedDateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
 
-            val sorted_messages=messages.value.messages.sortedBy {
-                val formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
-                ZonedDateTime.parse(it.created_at, formatter)
+            val sorted_messages = messages.value.messages.sortedBy {
+                it.created_at
+//                val formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
+//                ZonedDateTime.parse(it.created_at, formatter)
             }
 
 
             items(sorted_messages) { message ->
 
-                val isSender:Boolean= message.user_guid==sender?.guid
+                val isSender: Boolean = message.user_guid == sender?.guid
 
                 val messageDate = ZonedDateTime.parse(message.created_at, zonedDateTimeFormatter)
                 val formattedDate = messageDate.format(displayFormatter)
 
-                if(last_date !=formattedDate){
-                    Text(text = formattedDate,
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-                    last_date=formattedDate
+                if (last_date != formattedDate) {
+                    Text(
+                        text = formattedDate,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                    last_date = formattedDate
                 }
 
-                MessageItem(message,isSender)
+                MessageItem(message, isSender)
             }
         }
-    }}
+    }
+}
 
 
 @Composable
@@ -210,6 +252,7 @@ fun BottomBar(viewModel: ChatViewModel, user_guid: String, chatGuid: String) {
 
 
 }
+
 @Preview(showBackground = true, showSystemUi = true)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -217,9 +260,10 @@ fun TopBarPreview() {
     ChatScreen(viewModel = ChatViewModel(), navController = rememberNavController())
 
 }
+
 @Composable
-fun MessageItem(message: Message,isSender:Boolean) {
-    val alignment = if (isSender==true) {
+fun MessageItem(message: Message, isSender: Boolean) {
+    val alignment = if (isSender == true) {
         Alignment.End // Align to the end for sender
     } else {
         Alignment.Start // Align to the start for receiver
