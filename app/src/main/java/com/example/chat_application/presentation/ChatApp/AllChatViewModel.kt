@@ -32,10 +32,10 @@ class ChatViewModel : ViewModel() {
 
     private val sendMessageAdapter = moshi.adapter(SendMessageSchema::class.java)
 
-    //on Received Message handler
-    private val _receivedMessages = MutableStateFlow<WebSocketMessage?>(null)
-    val receivedMessages: StateFlow<WebSocketMessage?> get() = _receivedMessages
 
+    val receivedMessages: StateFlow<WebSocketMessage?> = webSocketEcho.receivedMessages
+
+    val connectionStatus: StateFlow<String> = webSocketEcho.connectionStatus
 
     val chatList = MutableStateFlow<List<Chat>>(emptyList())
 
@@ -43,10 +43,35 @@ class ChatViewModel : ViewModel() {
     var error_message = mutableStateOf("")
 
     init {
-        connectWebSocket()
-        getDirectChats()
-    }
+        viewModelScope.launch {
+            connectWebSocket()
+            getDirectChats()
 
+        }
+//            viewModelScope.launch {
+//                receivedMessages.collect { message ->
+//                    when (message) {
+//                        is WebSocketMessage.NewMessage -> {
+//                            Log.e("NewMessage", "is typing...")
+////                            addMessageToList(message)
+//                        }
+//                        is WebSocketMessage.UserTyping -> {
+//                            // Handle user typing logic
+//                            Log.e("UserTyping", "${message.user_guid} is typing...")
+//                        }
+//                        is WebSocketMessage.StatusMessage -> {
+//                            // Handle status update logic
+//                            Log.e("StatusMessage", "Status: ${message.status}")
+//                        }
+//                        is WebSocketMessage.MessageRead -> {
+//                            // Handle message read logic
+//                            Log.e("MessageRead", "Message read by ${message.user_guid}")
+//                        }
+//                        else -> {}
+//                    }
+//                }
+//            }
+    }
     var isLoading = mutableStateOf(true)
 
 
@@ -120,10 +145,11 @@ class ChatViewModel : ViewModel() {
                 user_guid = userGuid, chat_guid = chatGuid, content = message
             )
             val jsonMessage = sendMessageAdapter.toJson(newMessage)
-            Log.d("WebSocket", "Sending message: $jsonMessage")
+            Log.e("WebSocket", "Sending message: $jsonMessage")
             val success = webSocketEcho.sendMessage(jsonMessage)
             if (success) {
-                msg.value = ""  // Reset the msg value after sending the message
+                msg.value = ""
+
             } else {
                 updateText(msg.value)
                 Log.e("WebSocket", "Failed to send message")
@@ -134,13 +160,6 @@ class ChatViewModel : ViewModel() {
     //update the text each time
     fun updateText(text: String) {
         msg.value = text
-    }
-
-
-    fun handleReceivedMessage(message: WebSocketMessage) {
-        viewModelScope.launch {
-            _receivedMessages.value = message
-        }
     }
 
 

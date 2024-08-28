@@ -47,7 +47,7 @@ class WebSocketClient() {
     val receivedMessages: StateFlow<WebSocketMessage?> = _receivedMessages
 
 
-    private val _connectionStatus = MutableStateFlow("disconnected")
+    private val _connectionStatus = MutableStateFlow("connected")
     val connectionStatus: StateFlow<String> get() = _connectionStatus
 
     fun connect(url: String) {
@@ -68,6 +68,7 @@ class WebSocketClient() {
                     "new" -> {
                         val newMessage =
                             moshi.adapter(WebSocketMessage.NewMessage::class.java).fromJson(text)!!
+                        Log.e("newMessage", newMessage.toString())
                         _receivedMessages.value = newMessage
                         Log.e("receivedMessage", _receivedMessages.value.toString())
                     }
@@ -75,6 +76,7 @@ class WebSocketClient() {
                     "user_typing" -> {
                         val userTyping =
                             moshi.adapter(WebSocketMessage.UserTyping::class.java).fromJson(text)!!
+                        Log.e("userTyping", userTyping.toString())
                         _receivedMessages.value = userTyping
                         Log.e("receivedMessage", _receivedMessages.value.toString())
                     }
@@ -82,6 +84,7 @@ class WebSocketClient() {
                     "status" -> {
                         val status = moshi.adapter(WebSocketMessage.StatusMessage::class.java)
                             .fromJson(text)!!
+                        Log.e("newMessage", status.toString())
                         _receivedMessages.value = status
                         Log.e("receivedMessage", _receivedMessages.value.toString())
                     }
@@ -89,8 +92,12 @@ class WebSocketClient() {
                     "message_read" -> {
                         val message_read =
                             moshi.adapter(WebSocketMessage.MessageRead::class.java).fromJson(text)!!
+                        Log.e("newMessage", message_read.toString())
                         _receivedMessages.value = message_read
                         Log.e("receivedMessage", _receivedMessages.value.toString())
+                    }
+                    else->{
+                        Log.e("receivedMessage", "something else")
                     }
                 }
 //                Log.e("Received",_receivedMessages.value)
@@ -121,7 +128,9 @@ class WebSocketClient() {
 
     fun sendMessage(message: String): Boolean {
         return try {
+            _connectionStatus.value = "connected"
             webSocket.send(message) == true
+
             //also update the msg here
         } catch (e: Exception) {
             Log.e("WebSocketClient", "Error sending message: ${e.message}")
