@@ -150,6 +150,7 @@ fun ChatScreen(
             items(sorted_messages) { message ->
 
                 val isSender: Boolean = message.user_guid == sender?.guid
+                Log.e("From Lazy Column: isSender  ", isSender.toString() )
 
                 val messageDate = ZonedDateTime.parse(message.created_at, zonedDateTimeFormatter)
                 val formattedDate = messageDate.format(displayFormatter)
@@ -283,7 +284,7 @@ fun MessageItem(message: Message, isSender: Boolean) {
         }
     ) {
         Surface(
-            modifier = Modifier.shadow(5.dp)
+            modifier = Modifier.shadow(5.dp).clip(RoundedCornerShape(4.dp))
         ) {
             Text(
                 text = message.content,

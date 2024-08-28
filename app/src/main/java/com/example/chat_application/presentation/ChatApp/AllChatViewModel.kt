@@ -1,6 +1,7 @@
 package com.example.chat_application.presentation.ChatApp
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -56,7 +57,7 @@ class ChatViewModel : ViewModel() {
         Messages(
             has_more_messages = false,
             last_read_message = LastReadMessage("", "", ""),
-            messages = emptyList()
+            messages = mutableStateListOf()
         )
     )
 
