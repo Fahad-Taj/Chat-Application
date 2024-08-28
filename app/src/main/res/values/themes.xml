@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.RedChat" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.RedChat.SplashScreen" parent="Theme.SplashScreen">
+        <!-- Customize your splash screen background color -->
+        <item name="windowSplashScreenBackground">#FFFFFF</item>
+
+        <!-- Add your splash screen icon -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo</item>
+
+    </style>
+</resources>
