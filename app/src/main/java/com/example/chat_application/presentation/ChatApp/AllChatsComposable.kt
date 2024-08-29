@@ -55,6 +55,7 @@ import com.example.chat_application.api.RetrofitInstance
 import com.example.chat_application.models.Chat
 import com.example.chat_application.models.User
 import com.example.chat_application.models.UserItem
+import com.example.chat_application.util.User_Guid
 import com.example.chat_application.util.user_details
 
 @Composable
@@ -69,6 +70,7 @@ fun AllChatsComposable(
             .verticalScroll(rememberScrollState()),
     ) {
         val chatList by viewModel.chatList.collectAsState()
+
         // we can eaily get the count here but how can we update it in the real time that is the problem maybe socket htemselves do that
 //        val new_message_count=chatList.size.
 
@@ -103,7 +105,8 @@ fun SingleUserRow(
     isTyping: MutableState<Boolean> = mutableStateOf(true),
     isActive: MutableState<Boolean> = mutableStateOf(true)
 ) {
-    val user: User = chat.users[1]
+    val user: User? = chat.users.find { it.guid != User_Guid }
+
 
     Row(
         modifier = Modifier
@@ -143,14 +146,21 @@ fun SingleUserRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = user.username, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(text = user!!.username, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     if (isTyping.value) {
                         Text(
-                            text = "is Typing ...",
+                            text = "is typing ....",
                             color = Color(0xff2F6030),
                             fontSize = 10.sp
                         )
                     }
+                }
+                if (chat.new_messages_count>0) {
+                    Text(
+                        text = "${chat.new_messages_count}",
+                        color = Color(0xff2F6030),
+                        fontSize = 10.sp
+                    )
                 }
                 if (isActive.value) {
                     Spacer(modifier = Modifier.width(20.dp))
@@ -178,7 +188,7 @@ fun RequestedChatsComposable(navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Requested Chats Screen")
+        Text(text = "All Chats Screen")
     }
 }
 

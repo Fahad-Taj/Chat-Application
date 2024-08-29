@@ -1,6 +1,7 @@
 package com.example.chat_application.api
 
 import com.example.chat_application.util.TokenInterceptor
+import com.example.chat_application.util.baseUrl
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -8,7 +9,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    val baseUrl = "http://192.168.0.101:8001"
 
     val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

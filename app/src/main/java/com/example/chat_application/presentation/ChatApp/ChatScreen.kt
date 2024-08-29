@@ -1,5 +1,6 @@
 package com.example.chat_application.presentation.ChatApp
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
@@ -28,6 +29,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -46,19 +50,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.chat_application.models.Message
 import com.example.chat_application.models.OnReceived.WebSocketMessage
 import com.example.chat_application.models.User
+import com.example.chat_application.util.User_Guid
+import com.example.chat_application.util.user_details
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -70,12 +80,18 @@ fun ChatScreen(
 ) {
     Log.e("Chat from chat screen", viewModel.selectedScreen.toString())
     val chat = viewModel.selectedScreen
+
     val messages = viewModel.messages.collectAsState()
-    val sender = chat?.users?.get(0)
+
+    val sender = chat?.users?.find { it.guid == User_Guid }
     val chat_guid = chat?.chat_guid
-    val receiver = chat?.users?.get(1)
+    val receiver = chat?.users?.find { it.guid != User_Guid }
+
+    val isTyping by viewModel.isTyping.collectAsState()
+    val isStatus by viewModel.isStatus.collectAsState()
 
     val receivedMessage by viewModel.receivedMessages.collectAsState()
+
     val connectionStatus by viewModel.connectionStatus.collectAsState()
 
     BackHandler {
@@ -85,21 +101,20 @@ fun ChatScreen(
         }
     }
 
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-            viewModel.disconnectWebSocket()
-        }
-    }
+
+
     LaunchedEffect(Unit) {
-        viewModel.connectWebSocket()
+        //then remove this line
         if (chat_guid != null) {
             viewModel.getMessages(chat_guid)
         }
+        Log.e("demo", chat?.users.toString())
+
     }
 // UI elements here
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         receiver?.let {
-            TopBar(it)
+            TopBar(it, isTyping, isStatus)
         }
     }, bottomBar = {
         if (chat_guid != null && sender?.guid != null) {
@@ -109,27 +124,29 @@ fun ChatScreen(
 
         when (connectionStatus) {
             "connected" -> {
-                val listState = rememberLazyListState()
-                var last_date = ""
-                val displayFormatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
-                val zonedDateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
-                val sorted_messages = messages.value.messages.sortedBy {
-                    it.created_at
-                }
+
                 //control the date part and pagination is pending
 //                LaunchedEffect(sorted_messages) {
 //                    listState.scrollToItem(sorted_messages.size)
 //                }
+                val listState = rememberLazyListState()
+
                 LazyColumn(
                     modifier = Modifier
                         .padding(paddingValues)
-                        .background(Color(0xffD3D3D3))
-                    , state = listState
+                        .background(Color(0xffD3D3D3)),
+                    state = listState
                 ) {
+                    var last_date = ""
+                    val displayFormatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+                    val zonedDateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
+
+                    val sorted_messages = messages.value.messages.sortedBy {
+                        it.created_at
+                    }
                     items(sorted_messages) { message ->
 
                         val isSender: Boolean = message.user_guid == sender?.guid
-
                         val messageDate =
                             ZonedDateTime.parse(message.created_at, zonedDateTimeFormatter)
                         val formattedDate = messageDate.format(displayFormatter)
@@ -176,7 +193,11 @@ fun ChatScreen(
 
 
 @Composable
-fun TopBar(user: User) {
+fun TopBar(
+    user: User,
+    isTyping: Boolean,
+    isActive: Boolean
+) {
     Surface(
         modifier = Modifier.shadow(9.dp)
     ) {
@@ -202,19 +223,64 @@ fun TopBar(user: User) {
             }
 
             Spacer(modifier = Modifier.width(40.dp))
+
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .wrapContentHeight(Alignment.CenterVertically),
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = user.username)
+                Column {
+                    Text(text = user.username, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    if (isTyping) {
+                        Text(
+                            text = "is Typing ...", color = Color(0xff2F6030), fontSize = 10.sp
+                        )
+                    }
+                }
+                if (isActive) {
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(Color.Green),
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.width(40.dp))
+
+            MyDropDown()
+
 
         }
     }
 
+}
+
+@Composable
+fun MyDropDown() {
+
+    var expanded by remember { mutableStateOf(false) }
+
+    Icon(
+        imageVector = Icons.Default.MoreVert,
+        contentDescription = null,
+        modifier = Modifier
+            .size(24.dp)
+            .clickable {
+                expanded = true
+            }
+    )
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false }
+    ) {
+        DropdownMenuItem(
+            text = { Text("Delete") },
+            onClick = {
+
+                expanded = false
+            })
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -262,8 +328,9 @@ fun BottomBar(viewModel: ChatViewModel, user_guid: String, chatGuid: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TopBarPreview() {
-    ChatScreen(viewModel = ChatViewModel(), navController = rememberNavController())
-
+//    ChatScreen(viewModel = ChatViewModel(), navController = rememberNavController())
+    TopBar(user = User("ddd", "dddd", "ddddd", "null", "dddddddd"), true, true)
+//    BottomBar(viewModel = ChatViewModel(), user_guid = "sscsjfnd", chatGuid = "jdjdj")
 }
 
 @Composable

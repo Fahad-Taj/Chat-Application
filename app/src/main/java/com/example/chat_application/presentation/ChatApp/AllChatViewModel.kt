@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.chat_application.api.RetrofitInstance
 import com.example.chat_application.models.Chat
 import com.example.chat_application.models.LastReadMessage
+import com.example.chat_application.models.Message
 import com.example.chat_application.models.Messages
 import com.example.chat_application.models.OnReceived.WebSocketMessage
 import com.example.chat_application.models.User
@@ -19,18 +20,30 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+@OptIn(DelicateCoroutinesApi::class)
 class ChatViewModel : ViewModel() {
 
     private val webSocketEcho = WebSocketClient()
     private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
 
     private val sendMessageAdapter = moshi.adapter(SendMessageSchema::class.java)
+
+    private val _messages = MutableStateFlow(
+        Messages(
+            has_more_messages = false,
+            last_read_message = LastReadMessage("", "", ""),
+            messages = mutableListOf()))
+
+    val messages: StateFlow<Messages> = _messages.asStateFlow()
 
 
     val receivedMessages: StateFlow<WebSocketMessage?> = webSocketEcho.receivedMessages
@@ -42,51 +55,69 @@ class ChatViewModel : ViewModel() {
     val messageList = MutableStateFlow<List<Messages>>(emptyList())
     var error_message = mutableStateOf("")
 
-    init {
-        viewModelScope.launch {
-            connectWebSocket()
-            getDirectChats()
+    val isTyping = MutableStateFlow<Boolean>(false)
+    val isStatus = MutableStateFlow<Boolean>(false)
 
+
+    init {
+        connectWebSocket()
+        viewModelScope.launch {
+            receivedMessages.collect { message ->
+                when (message) {
+                    is WebSocketMessage.NewMessage -> {
+//                        val newMessage :Message = NewMessagetoMessage(message)
+//                        _messages.value = _messages.value.copy(
+//                            messages = _messages.value.messages.apply { add(newMessage) } // Modify MutableList
+//                        )
+//                        Log.e("NewMessage", "Message added: $newMessage")
+//                        Log.e("check", " ${_messages.value.messages.last()}")
+
+                        // addMessageToList(message)
+                        //following guid should be made double ticked something like that
+                    }
+
+                    is WebSocketMessage.UserTyping -> {
+                        // Handle user typing logic
+                        if (message.type == "user_typing") {
+                            isTyping.value = true
+                            GlobalScope.launch {
+                                delay(2500) // Delay for 2 second
+                                isTyping.value = false
+                            }
+                        } else {
+                            isTyping.value = false
+                        }
+                        Log.e("UserTyping", "${message.user_guid} is typing...")
+                    }
+
+                    is WebSocketMessage.StatusMessage -> {
+                        // Handle status update logic
+                        if (message.status == "online") {
+                            isStatus.value = true
+                        } else {
+                            isStatus.value = false
+                        }
+                        Log.e("StatusMessage", "Status: ${message.status}")
+                    }
+
+                    is WebSocketMessage.MessageRead -> {
+                        // Handle message read logic
+                        //somehow need to save the last_read_message or like that where
+                        Log.e("MessageRead", "Message read by ${message.last_read_message_guid}")
+                    }
+
+                    else -> {}
+                }
+            }
         }
-//            viewModelScope.launch {
-//                receivedMessages.collect { message ->
-//                    when (message) {
-//                        is WebSocketMessage.NewMessage -> {
-//                            Log.e("NewMessage", "is typing...")
-////                            addMessageToList(message)
-//                        }
-//                        is WebSocketMessage.UserTyping -> {
-//                            // Handle user typing logic
-//                            Log.e("UserTyping", "${message.user_guid} is typing...")
-//                        }
-//                        is WebSocketMessage.StatusMessage -> {
-//                            // Handle status update logic
-//                            Log.e("StatusMessage", "Status: ${message.status}")
-//                        }
-//                        is WebSocketMessage.MessageRead -> {
-//                            // Handle message read logic
-//                            Log.e("MessageRead", "Message read by ${message.user_guid}")
-//                        }
-//                        else -> {}
-//                    }
-//                }
-//            }
     }
+
     var isLoading = mutableStateOf(true)
 
 
     var selectedScreen: Chat? = null
     var msg = mutableStateOf("")
 
-    private val _messages = MutableStateFlow(
-        Messages(
-            has_more_messages = false,
-            last_read_message = LastReadMessage("", "", ""),
-            messages = mutableStateListOf()
-        )
-    )
-
-    val messages: StateFlow<Messages> = _messages.asStateFlow()
 
     //connect to a web socket
     fun connectWebSocket() {
@@ -149,17 +180,10 @@ class ChatViewModel : ViewModel() {
             val success = webSocketEcho.sendMessage(jsonMessage)
             if (success) {
                 msg.value = ""
-
             } else {
-                updateText(msg.value)
                 Log.e("WebSocket", "Failed to send message")
             }
         }
-    }
-
-    //update the text each time
-    fun updateText(text: String) {
-        msg.value = text
     }
 
 
@@ -172,3 +196,13 @@ data class SendMessageSchema(
     val chat_guid: String,
     val content: String,
 )
+fun NewMessagetoMessage(message: WebSocketMessage.NewMessage) :Message{
+    return Message(
+        user_guid = message.user_guid,
+        chat_guid = message.chat_guid,
+        content = message.content,
+        created_at = message.created_at,
+        is_read = message.is_read,
+        message_guid = message.message_guid
+    )
+}

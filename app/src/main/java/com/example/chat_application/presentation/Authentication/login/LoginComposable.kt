@@ -48,6 +48,7 @@ import androidx.navigation.NavHostController
 import com.example.chat_application.presentation.Authentication.AuthenticationRoutes
 import com.example.chat_application.presentation.Root_graph_routes
 import com.example.chat_application.ui.theme.primary_font
+import com.example.chat_application.util.User_Guid
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +79,7 @@ fun LoginComposable(
 
     LaunchedEffect(key1 = response) {
         if(response != null){
+            User_Guid= response!!.user_guid
             navController.navigate(Root_graph_routes.MainScreenRoute.route)
         }
     }

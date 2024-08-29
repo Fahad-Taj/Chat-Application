@@ -14,15 +14,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -31,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -44,24 +51,30 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.chat_application.R
+import com.example.chat_application.presentation.Authentication.AuthenticationRoutes
 import com.example.chat_application.presentation.Root_graph_routes
+import com.example.chat_application.util.User_Guid
 import kotlin.math.log
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MainChatScreen(navController: NavHostController){
+fun MainChatScreen(MainNavController: NavHostController) {
 
     val navController = rememberNavController()
     val viewModel: ChatViewModel = viewModel()
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
     LaunchedEffect(key1 = Unit) {
         viewModel.selectedScreen = null
+        viewModel.connectWebSocket()
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().navigationBarsPadding()
+        modifier = Modifier
+            .fillMaxSize()
+            .navigationBarsPadding()
     ) {
         // Header
         Row(
@@ -73,12 +86,34 @@ fun MainChatScreen(navController: NavHostController){
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Chat Application", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Chat Application",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.width(90.dp))
+            Icon(painter = painterResource(id = R.drawable.outline_logout_24),
+                contentDescription = "Signout",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable {
+//                        viewModel.disconnectWebSocket()
+//                        User_Guid = null
+                        //basically this should happen at the time of logout that
+                        // socket is closed and navigate back
+
+//                        navController.navigate(Root_graph_routes.AuthGraph.route) {
+//                            popUpTo(Root_graph_routes.AuthGraph.route) { inclusive = true }
+//                        }
+                    })
+
         }
 
         // Row containing the tabs
 
-        if(viewModel.selectedScreen == null){
+        if (viewModel.selectedScreen == null) {
             Surface(
                 modifier = Modifier.shadow(9.dp)
             ) {
@@ -88,9 +123,10 @@ fun MainChatScreen(navController: NavHostController){
                         .height(80.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
-                ){
+                ) {
 
-                    val selectedAll = currentDestination?.hierarchy?.any { it.route == ChatRoutes.AllChats.route } == true
+                    val selectedAll =
+                        currentDestination?.hierarchy?.any { it.route == ChatRoutes.AllChats.route } == true
                     Text(
                         modifier = Modifier
                             .fillMaxWidth(0.5f)
@@ -98,10 +134,11 @@ fun MainChatScreen(navController: NavHostController){
                             .wrapContentSize(Alignment.Center)
                             .clickable { navController.navigate(ChatRoutes.AllChats.route) },
                         text = "All",
-                        textDecoration = if(selectedAll)   TextDecoration.Underline else TextDecoration.None
+                        textDecoration = if (selectedAll) TextDecoration.Underline else TextDecoration.None
                     )
 
-                    val selectedRequested = currentDestination?.hierarchy?.any { it.route == ChatRoutes.RequestedChats.route } == true
+                    val selectedRequested =
+                        currentDestination?.hierarchy?.any { it.route == ChatRoutes.RequestedChats.route } == true
                     Text(
                         modifier = Modifier
                             .fillMaxWidth(1f)
@@ -109,7 +146,7 @@ fun MainChatScreen(navController: NavHostController){
                             .wrapContentSize(Alignment.Center)
                             .clickable { navController.navigate(ChatRoutes.RequestedChats.route) },
                         text = "Requested",
-                        textDecoration = if(selectedRequested)   TextDecoration.Underline else TextDecoration.None
+                        textDecoration = if (selectedRequested) TextDecoration.Underline else TextDecoration.None
                     )
                 }
             }
@@ -125,6 +162,6 @@ fun MainChatScreen(navController: NavHostController){
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun MainChatScreenPreview(){
-    MainChatScreen(navController = rememberNavController())
+fun MainChatScreenPreview() {
+    MainChatScreen(rememberNavController())
 }
