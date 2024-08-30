@@ -2,16 +2,20 @@ package com.example.redchat.api
 
 import com.example.redchat.models.LoginRequest
 import com.example.redchat.models.LoginResponse
+import com.example.redchat.models.SendFriendRequestRequest
+import com.example.redchat.models.SendFriendRequestResponse
 import com.example.redchat.models.SignupRequest
 import com.example.redchat.models.SignupResponse
 import com.example.redchat.models.UploadImageResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
 
 interface ApiInterface {
 
@@ -32,4 +36,21 @@ interface ApiInterface {
         @Part image: MultipartBody.Part
     ): Response<UploadImageResponse>
 
+    @POST("/api/user/sendFriendRequest")
+    suspend fun sendFriendRequest(
+        @Header("Authorization") bearer_token: String,
+        @Body username: SendFriendRequestRequest
+    ): Response<SendFriendRequestResponse>
+
+    @POST("/api/user/acceptFriendRequest")
+    suspend fun acceptFriendRequest(
+        @Header("Authorization")    token: String,
+        @Body username: SendFriendRequestRequest
+    ): Response<SendFriendRequestResponse>
+
+    @DELETE("/api/user/rejectFriendRequest/{username}")
+    suspend fun rejectFriendRequest(
+        @Header("Authorization")    token: String,
+        @Path("username") username: String
+    ): Response<SendFriendRequestResponse>
 }

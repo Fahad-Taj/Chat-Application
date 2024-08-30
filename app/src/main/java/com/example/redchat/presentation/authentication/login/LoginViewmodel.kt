@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.redchat.api.RetrofitInstance
 import com.example.redchat.api.access_token
+import com.example.redchat.api.userFromReq
 import com.example.redchat.models.LoginRequest
 import com.example.redchat.models.LoginResponse
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,6 +37,7 @@ class LoginViewmodel: ViewModel() {
                 if(result.isSuccessful){
                     access_token = result.body()?.token
                     _response.value = result.body()
+                    userFromReq = result.body()?.userData!!
                     Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, result.code().toString(), Toast.LENGTH_SHORT).show()
