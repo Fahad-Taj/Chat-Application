@@ -1,7 +1,8 @@
 package com.example.chat_application.presentation.ChatApp
 
+import android.os.Build
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,31 +12,27 @@ import com.example.chat_application.models.LastReadMessage
 import com.example.chat_application.models.Message
 import com.example.chat_application.models.Messages
 import com.example.chat_application.models.OnReceived.WebSocketMessage
-import com.example.chat_application.models.User
-import com.example.chat_application.models.UserItem
-import com.example.chat_application.util.user_details
+import com.example.chat_application.util.Chat_Guid
 import com.example.chat_application.util.web_socket
 import com.example.chat_application.websocket.WebSocketClient
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(DelicateCoroutinesApi::class)
 class ChatViewModel : ViewModel() {
 
     private val webSocketEcho = WebSocketClient()
     private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
 
-    private val sendMessageAdapter = moshi.adapter(SendMessageSchema::class.java)
+    private val sendMessageAdapter = moshi.adapter(SendMessage_Schema::class.java)
 
     private val _messages = MutableStateFlow(
         Messages(
@@ -43,17 +40,17 @@ class ChatViewModel : ViewModel() {
             last_read_message = LastReadMessage("", "", ""),
             messages = mutableListOf()))
 
-    val messages: StateFlow<Messages> = _messages.asStateFlow()
+    val messages: StateFlow<Messages> = _messages
 
 
     val receivedMessages: StateFlow<WebSocketMessage?> = webSocketEcho.receivedMessages
-
     val connectionStatus: StateFlow<String> = webSocketEcho.connectionStatus
 
-    val chatList = MutableStateFlow<List<Chat>>(emptyList())
 
-    val messageList = MutableStateFlow<List<Messages>>(emptyList())
-    var error_message = mutableStateOf("")
+    //list of different chat that user is friend with something like that
+    private val _chats = MutableStateFlow<List<Chat>>(emptyList())
+    val chats: StateFlow<List<Chat>> = _chats
+
 
     val isTyping = MutableStateFlow<Boolean>(false)
     val isStatus = MutableStateFlow<Boolean>(false)
@@ -65,15 +62,18 @@ class ChatViewModel : ViewModel() {
             receivedMessages.collect { message ->
                 when (message) {
                     is WebSocketMessage.NewMessage -> {
-//                        val newMessage :Message = NewMessagetoMessage(message)
-//                        _messages.value = _messages.value.copy(
-//                            messages = _messages.value.messages.apply { add(newMessage) } // Modify MutableList
-//                        )
-//                        Log.e("NewMessage", "Message added: $newMessage")
-//                        Log.e("check", " ${_messages.value.messages.last()}")
+                        Log.e("NewMessage", "Message added: $message")
+                        val newMessage: Message = NewMessagetoMessage(message)
 
-                        // addMessageToList(message)
-                        //following guid should be made double ticked something like that
+                        if (message.chat_guid == Chat_Guid) {
+                            // Access the current list of messages
+                            val currentMessages = _messages.value.messages.toMutableList()
+                            // Add the new message to the list
+                            currentMessages.add(newMessage)
+                            // Update the StateFlow with the new list of messages
+                            _messages.value = _messages.value.copy(messages = currentMessages)
+                            Log.e("NewMessage", "Message added: ${_messages.value.messages.last()}")
+                        }
                     }
 
                     is WebSocketMessage.UserTyping -> {
@@ -111,6 +111,9 @@ class ChatViewModel : ViewModel() {
             }
         }
     }
+
+
+
 
     var isLoading = mutableStateOf(true)
 
@@ -161,7 +164,7 @@ class ChatViewModel : ViewModel() {
             try {
                 isLoading.value = true
                 val result = RetrofitInstance.api.getDirectChats()
-                chatList.value = result.body()?.chats ?: emptyList()
+                _chats.value = result.body()?.chats ?: emptyList()
                 isLoading.value = false
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -172,7 +175,7 @@ class ChatViewModel : ViewModel() {
     //send the message to
     fun sendMessage(message: String, userGuid: String, chatGuid: String) {
         viewModelScope.launch {
-            val newMessage = SendMessageSchema(
+            val newMessage = SendMessage_Schema(
                 user_guid = userGuid, chat_guid = chatGuid, content = message
             )
             val jsonMessage = sendMessageAdapter.toJson(newMessage)
@@ -187,10 +190,11 @@ class ChatViewModel : ViewModel() {
     }
 
 
+
 }
 
 @JsonClass(generateAdapter = true)
-data class SendMessageSchema(
+data class SendMessage_Schema(
     val type: String = "new_message",
     val user_guid: String,
     val chat_guid: String,
@@ -203,6 +207,6 @@ fun NewMessagetoMessage(message: WebSocketMessage.NewMessage) :Message{
         content = message.content,
         created_at = message.created_at,
         is_read = message.is_read,
-        message_guid = message.message_guid
+        message_guid =message.message_guid
     )
 }

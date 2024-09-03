@@ -47,8 +47,8 @@ class WebSocketClient() {
     val receivedMessages: StateFlow<WebSocketMessage?> = _receivedMessages
 
 
-    private val _connectionStatus = MutableStateFlow("disconnected")
-    val connectionStatus: StateFlow<String> get() = _connectionStatus
+    private val _connectionStatus = MutableStateFlow<String>("disconnected")
+    val connectionStatus: StateFlow<String>  = _connectionStatus
 
     fun connect(url: String) {
 

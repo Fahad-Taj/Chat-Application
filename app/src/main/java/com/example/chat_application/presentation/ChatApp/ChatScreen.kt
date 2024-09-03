@@ -67,6 +67,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.chat_application.models.Message
 import com.example.chat_application.models.OnReceived.WebSocketMessage
 import com.example.chat_application.models.User
+import com.example.chat_application.util.Chat_Guid
 import com.example.chat_application.util.User_Guid
 import com.example.chat_application.util.user_details
 import java.time.LocalDateTime
@@ -84,7 +85,10 @@ fun ChatScreen(
     val messages = viewModel.messages.collectAsState()
 
     val sender = chat?.users?.find { it.guid == User_Guid }
+
     val chat_guid = chat?.chat_guid
+    Chat_Guid=chat_guid
+
     val receiver = chat?.users?.find { it.guid != User_Guid }
 
     val isTyping by viewModel.isTyping.collectAsState()
@@ -141,9 +145,9 @@ fun ChatScreen(
                     val displayFormatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
                     val zonedDateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
 
-                    val sorted_messages = messages.value.messages.sortedBy {
-                        it.created_at
+                    val sorted_messages = messages.value.messages.sortedBy {it.is_read
                     }
+
                     items(sorted_messages) { message ->
 
                         val isSender: Boolean = message.user_guid == sender?.guid

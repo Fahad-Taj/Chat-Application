@@ -1,6 +1,8 @@
 package com.example.chat_application.presentation.ChatApp
 
+import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +60,7 @@ import com.example.chat_application.models.UserItem
 import com.example.chat_application.util.User_Guid
 import com.example.chat_application.util.user_details
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AllChatsComposable(
     navController: NavHostController,
@@ -69,7 +72,8 @@ fun AllChatsComposable(
             .padding(10.dp)
             .verticalScroll(rememberScrollState()),
     ) {
-        val chatList by viewModel.chatList.collectAsState()
+
+        val chatList by viewModel.chats.collectAsState()
 
         // we can eaily get the count here but how can we update it in the real time that is the problem maybe socket htemselves do that
 //        val new_message_count=chatList.size.
@@ -97,6 +101,7 @@ fun AllChatsComposable(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SingleUserRow(
     chat: Chat,
@@ -192,6 +197,7 @@ fun RequestedChatsComposable(navController: NavHostController) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun Preview() {
