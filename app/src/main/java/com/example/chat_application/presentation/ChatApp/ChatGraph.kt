@@ -3,15 +3,12 @@ package com.example.chat_application.presentation.ChatApp
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import com.example.chat_application.models.Chat
-import com.example.chat_application.models.User
-import com.example.chat_application.presentation.Authentication.AuthenticationRoutes
+import com.example.chat_application.presentation.ChatApp.AllChat.AllChatsComposable
+import com.example.chat_application.presentation.ChatApp.AllChat.ChatViewModel
+import com.example.chat_application.presentation.ChatApp.RequestedChat.RequestedChatsComposable
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

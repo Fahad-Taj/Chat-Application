@@ -1,4 +1,4 @@
-package com.example.chat_application.presentation.ChatApp
+package com.example.chat_application.presentation.ChatApp.AllChat
 
 import android.os.Build
 import android.util.Log

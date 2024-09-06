@@ -1,10 +1,8 @@
 package com.example.chat_application.websocket
 
 import android.util.Log
-import androidx.compose.runtime.*
 import com.example.chat_application.api.RetrofitInstance
 import com.example.chat_application.models.OnReceived.WebSocketMessage
-import com.example.chat_application.presentation.ChatApp.ChatViewModel
 import com.example.chat_application.util.web_socket
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory

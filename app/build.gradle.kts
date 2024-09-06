@@ -123,6 +123,10 @@ dependencies {
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     annotationProcessor ("com.google.dagger:hilt-compiler:2.51.1")
 
+    //koil
+    implementation("io.coil-kt:coil-compose:2.0.0")
+
+
 
 
 
