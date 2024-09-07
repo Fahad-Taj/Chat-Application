@@ -46,8 +46,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.chat_application.models.Chat
+import com.example.chat_application.models.DirectChatsResponse
 import com.example.chat_application.models.User
 import com.example.chat_application.presentation.ChatApp.ChatRoutes
+import com.example.chat_application.util.Unread_Message_Count
 import com.example.chat_application.util.User_Guid
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -62,11 +64,23 @@ fun AllChatsComposable(
             .padding(10.dp)
             .verticalScroll(rememberScrollState()),
     ) {
+        val isTyping by viewModel.isTyping.collectAsState()
+        val isStatus by viewModel.isStatus.collectAsState()
 
-        val chatList by viewModel.chats.collectAsState()
+        var chats: DirectChatsResponse? = null
+        val DirectChats by viewModel.chats.collectAsState()
+        DirectChats?.let { response ->
+            if (response.isSuccessful) {
+                chats = response.body()
+                Unread_Message_Count = chats!!.total_unread_messages_count
+            } else {
+                //show the error
+            }
+        } ?: run {
+            Text("Loading the state")
+        }
 
-        // we can eaily get the count here but how can we update it in the real time that is the problem maybe socket htemselves do that
-//        val new_message_count=chatList.size.
+
 
         LaunchedEffect(key1 = Unit) {
             viewModel.getDirectChats()
@@ -75,13 +89,19 @@ fun AllChatsComposable(
         if (viewModel.isLoading.value) {
             CircularProgressIndicator()
         } else {
-            chatList.forEach { it ->
+            chats?.chats?.forEach { it ->
                 Surface(
                     modifier = Modifier
                         .shadow(9.dp)
                         .clip(RoundedCornerShape(10.dp))
                 ) {
-                    SingleUserRow(chat = it, navController = navController, viewModel = viewModel)
+                    SingleUserRow(
+                        chat = it,
+                        navController = navController,
+                        viewModel = viewModel,
+                        isTyping,
+                        isStatus
+                    )
                 }
                 Spacer(modifier = Modifier.height(5.dp))
 
@@ -97,8 +117,8 @@ fun SingleUserRow(
     chat: Chat,
     navController: NavHostController,
     viewModel: ChatViewModel,
-    isTyping: MutableState<Boolean> = mutableStateOf(true),
-    isActive: MutableState<Boolean> = mutableStateOf(true)
+    isTyping: Map<String, Boolean>,
+    isActive: Map<String, Boolean>
 ) {
     val user: User? = chat.users.find { it.guid != User_Guid }
 
@@ -142,7 +162,7 @@ fun SingleUserRow(
             ) {
                 Column {
                     Text(text = user!!.username, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                    if (isTyping.value) {
+                    if (isTyping[user.guid] == true) {
                         Text(
                             text = "is typing ....",
                             color = Color(0xff2F6030),
@@ -150,21 +170,23 @@ fun SingleUserRow(
                         )
                     }
                 }
-                if (chat.new_messages_count>0) {
+                if (chat.new_messages_count > 0) {
                     Text(
                         text = "${chat.new_messages_count}",
                         color = Color(0xff2F6030),
                         fontSize = 10.sp
                     )
                 }
-                if (isActive.value) {
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(Color.Green),
-                    )
+                if (user != null) {
+                    if (isActive[user.guid] == true) {
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(Color.Green),
+                        )
+                    }
                 }
             }
             Icon(
@@ -175,7 +197,6 @@ fun SingleUserRow(
         }
     }
 }
-
 
 
 @RequiresApi(Build.VERSION_CODES.O)

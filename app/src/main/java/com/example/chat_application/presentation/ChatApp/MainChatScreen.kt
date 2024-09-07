@@ -40,6 +40,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.chat_application.R
 import com.example.chat_application.presentation.ChatApp.AllChat.ChatViewModel
+import com.example.chat_application.util.Unread_Message_Count
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -118,7 +119,7 @@ fun MainChatScreen(MainNavController: NavHostController) {
                             .height(80.dp)
                             .wrapContentSize(Alignment.Center)
                             .clickable { navController.navigate(ChatRoutes.AllChats.route) },
-                        text = "All",
+                        text = if(Unread_Message_Count>0) "ALl ${Unread_Message_Count}" else "ALL",
                         textDecoration = if (selectedAll) TextDecoration.Underline else TextDecoration.None
                     )
 

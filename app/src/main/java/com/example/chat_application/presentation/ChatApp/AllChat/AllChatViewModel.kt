@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chat_application.api.RetrofitInstance
 import com.example.chat_application.models.Chat
+import com.example.chat_application.models.DirectChatsResponse
 import com.example.chat_application.models.LastReadMessage
 import com.example.chat_application.models.Message
 import com.example.chat_application.models.Messages
@@ -23,7 +24,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.Response
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(DelicateCoroutinesApi::class)
@@ -48,12 +51,16 @@ class ChatViewModel : ViewModel() {
 
 
     //list of different chat that user is friend with something like that
-    private val _chats = MutableStateFlow<List<Chat>>(emptyList())
-    val chats: StateFlow<List<Chat>> = _chats
+
+    private val _chats = MutableStateFlow<Response<DirectChatsResponse>?>(null)
+    val chats: StateFlow<Response<DirectChatsResponse>?> = _chats
 
 
-    val isTyping = MutableStateFlow<Boolean>(false)
-    val isStatus = MutableStateFlow<Boolean>(false)
+    private val _isTyping = MutableStateFlow<Map<String,Boolean>>(emptyMap())
+     val isTyping :StateFlow<Map<String,Boolean>> =_isTyping
+
+    private val _isStatus = MutableStateFlow<Map<String,Boolean>>(emptyMap())
+    val isStatus :StateFlow<Map<String,Boolean>> =_isStatus
 
 
     init {
@@ -79,13 +86,20 @@ class ChatViewModel : ViewModel() {
                     is WebSocketMessage.UserTyping -> {
                         // Handle user typing logic
                         if (message.type == "user_typing") {
-                            isTyping.value = true
-                            GlobalScope.launch {
-                                delay(2500) // Delay for 2 second
-                                isTyping.value = false
+                            _isTyping.value = _isTyping.value.toMutableMap().apply {
+                                put(message.user_guid,true)
                             }
-                        } else {
-                            isTyping.value = false
+                            GlobalScope.launch {
+                                delay(3000) // Delay for 3 second
+                                _isTyping.value = _isTyping.value.toMutableMap().apply {
+                                    put(message.user_guid,false)
+                                }
+                            }
+                        }
+                        else {
+                            _isTyping.value = _isTyping.value.toMutableMap().apply {
+                                put(message.user_guid,false)
+                            }
                         }
                         Log.e("UserTyping", "${message.user_guid} is typing...")
                     }
@@ -93,18 +107,34 @@ class ChatViewModel : ViewModel() {
                     is WebSocketMessage.StatusMessage -> {
                         // Handle status update logic
                         if (message.status == "online") {
-                            isStatus.value = true
+                            _isStatus.value = _isStatus.value.toMutableMap().apply {
+                                put(message.user_guid,true)
+                            }
                         } else {
-                            isStatus.value = false
+                            _isStatus.value = _isStatus.value.toMutableMap().apply {
+                                put(message.user_guid,false)
+                            }
                         }
                         Log.e("StatusMessage", "Status: ${message.status}")
                     }
 
                     is WebSocketMessage.MessageRead -> {
-                        // Handle message read logic
-                        //somehow need to save the last_read_message or like that where
-                        Log.e("MessageRead", "Message read by ${message.last_read_message_guid}")
-                    }
+                        val messageReadEvent = message as WebSocketMessage.MessageRead
+                        viewModelScope.launch {
+                            _messages.update { currentState ->
+                                val updatedMessages = currentState.messages.map { msg ->
+                                    if (msg.chat_guid == messageReadEvent.chat_guid &&
+                                        msg.created_at <= messageReadEvent.last_read_message_created_at.toString()
+                                    ) {
+                                        msg.copy(is_read = true)
+                                    } else {
+                                        msg
+                                    }
+                                }.toMutableList()
+                                currentState.copy(messages = updatedMessages)
+                            }
+                        }
+                        }
 
                     else -> {}
                 }
@@ -139,6 +169,8 @@ class ChatViewModel : ViewModel() {
                 val response = RetrofitInstance.api.getMessages(chatGuid, 20)
                 if (response.isSuccessful) {
                     _messages.value = response.body() ?: _messages.value
+                    Log.e("GetMessage", response.body().toString())
+
                 } else {
                     Log.e("getMessages", "Error: ${response.errorBody()?.string()}")
                 }
@@ -156,7 +188,19 @@ class ChatViewModel : ViewModel() {
             webSocketEcho.disconnect()
         }
     }
-
+//    fun sendMessageRead(message: Message) {
+//        viewModelScope.launch {
+//            val messageReadEvent = WebSocketMessage.MessageRead(
+//                type = "message_read",
+//                chat_guid = message.chat_guid,
+//                user_guid = message.user_guid, // Implement this method to get the current user's GUID
+//                last_read_message_guid = message.message_guid,
+//                last_read_message_created_at = message.created_at
+//            )
+//            webSocketEcho.send(messageReadEvent)
+//            updateMessageReadStatus(messageReadEvent)
+//        }
+//    }
 
     //chat details we can get it from here like
     fun getDirectChats() {
@@ -164,7 +208,7 @@ class ChatViewModel : ViewModel() {
             try {
                 isLoading.value = true
                 val result = RetrofitInstance.api.getDirectChats()
-                _chats.value = result.body()?.chats ?: emptyList()
+                _chats.value = result
                 isLoading.value = false
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -188,6 +232,7 @@ class ChatViewModel : ViewModel() {
             }
         }
     }
+
 
 
 

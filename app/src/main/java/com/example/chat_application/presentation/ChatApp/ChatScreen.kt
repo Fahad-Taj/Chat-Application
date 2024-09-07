@@ -61,6 +61,8 @@ import com.example.chat_application.models.User
 import com.example.chat_application.presentation.ChatApp.AllChat.ChatViewModel
 import com.example.chat_application.util.Chat_Guid
 import com.example.chat_application.util.User_Guid
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -73,9 +75,7 @@ fun ChatScreen(
     val chat = viewModel.selectedScreen
 
     val messages = viewModel.messages.collectAsState()
-
     val sender = chat?.users?.find { it.guid == User_Guid }
-
     val chat_guid = chat?.chat_guid
     Chat_Guid=chat_guid
 
@@ -122,39 +122,51 @@ fun ChatScreen(
 //                LaunchedEffect(sorted_messages) {
 //                    listState.scrollToItem(sorted_messages.size)
 //                }
-                val listState = rememberLazyListState()
+                val listState= rememberLazyListState()
 
                 LazyColumn(
                     modifier = Modifier
                         .padding(paddingValues)
                         .background(Color(0xffD3D3D3)),
+                    reverseLayout = true,
                     state = listState
                 ) {
                     var last_date = ""
-                    val displayFormatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+                    val displayFormatterSameYear = DateTimeFormatter.ofPattern("EEEE d MMM")
+                    val displayFormatterDifferentYear = DateTimeFormatter.ofPattern("EEEE d MMM yyyy")
                     val zonedDateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
+                    val currentYear = LocalDate.now().year
 
-                    val sorted_messages = messages.value.messages.sortedBy {it.is_read
-                    }
+                    val sorted_messages = messages.value.messages.sortedByDescending { it.created_at }
 
                     items(sorted_messages) { message ->
 
                         val isSender: Boolean = message.user_guid == sender?.guid
                         val messageDate =
                             ZonedDateTime.parse(message.created_at, zonedDateTimeFormatter)
-                        val formattedDate = messageDate.format(displayFormatter)
 
-                        if (last_date != formattedDate) {
-                            Text(
-                                text = formattedDate,
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .fillMaxWidth(),
-                                textAlign = TextAlign.Center
-                            )
-                            last_date = formattedDate
+                        // Format the date based on whether it's from the current year or not
+                        val formattedDate = if (messageDate.year == currentYear) {
+                            messageDate.format(displayFormatterSameYear)
+                        } else {
+                            messageDate.format(displayFormatterDifferentYear)
                         }
-                        MessageItem(message, isSender)
+
+                        Box(modifier = Modifier
+                            .fillMaxWidth()){
+                            if (last_date != formattedDate) {
+                                Text(
+                                    text = formattedDate,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                                last_date = formattedDate
+                                Spacer(modifier = Modifier.height(10.dp))
+                            }
+                            MessageItem(message, isSender)
+                        }
                     }
                 }
             }
@@ -188,8 +200,8 @@ fun ChatScreen(
 @Composable
 fun TopBar(
     user: User,
-    isTyping: Boolean,
-    isActive: Boolean
+    isTyping: Map<String,Boolean>,
+    isActive: Map<String,Boolean>
 ) {
     Surface(
         modifier = Modifier.shadow(9.dp)
@@ -222,13 +234,13 @@ fun TopBar(
             ) {
                 Column {
                     Text(text = user.username, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                    if (isTyping) {
+                    if (isTyping[user.guid] == true) {
                         Text(
                             text = "is Typing ...", color = Color(0xff2F6030), fontSize = 10.sp
                         )
                     }
                 }
-                if (isActive) {
+                if (isActive[user.guid] == true) {
                     Spacer(modifier = Modifier.width(20.dp))
                     Box(
                         modifier = Modifier
@@ -242,8 +254,6 @@ fun TopBar(
             Spacer(modifier = Modifier.width(40.dp))
 
             MyDropDown()
-
-
         }
     }
 
@@ -323,10 +333,11 @@ fun BottomBar(viewModel: ChatViewModel, user_guid: String, chatGuid: String) {
 @Composable
 fun TopBarPreview() {
 //    ChatScreen(viewModel = ChatViewModel(), navController = rememberNavController())
-    TopBar(user = User("ddd", "dddd", "ddddd", "null", "dddddddd"), true, true)
+//    TopBar(user = User("ddd", "dddd", "ddddd", "null", "dddddddd"), true, true)
 //    BottomBar(viewModel = ChatViewModel(), user_guid = "sscsjfnd", chatGuid = "jdjdj")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MessageItem(message: Message, isSender: Boolean) {
     val arrangement: Arrangement.Horizontal = if (isSender) {
@@ -351,5 +362,15 @@ fun MessageItem(message: Message, isSender: Boolean) {
                     .clip(RoundedCornerShape(8.dp)) // Align the text based on sender or receiver
             )
         }
+        val time = extractTimeFromTimestamp(message.created_at)
+        Text(text = time, fontSize = 12.sp)
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun extractTimeFromTimestamp(timestamp: String): String {
+    val zonedDateTime = ZonedDateTime.parse(timestamp)
+    val localDateTime = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault())
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    return localDateTime.format(formatter)
 }

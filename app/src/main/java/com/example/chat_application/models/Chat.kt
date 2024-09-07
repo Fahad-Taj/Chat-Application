@@ -1,6 +1,5 @@
 package com.example.chat_application.models
 
-import java.io.Serializable
 
 data class Chat(
     val chat_guid: String,
