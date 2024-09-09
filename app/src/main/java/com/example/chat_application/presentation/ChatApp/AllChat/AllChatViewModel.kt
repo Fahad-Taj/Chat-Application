@@ -24,8 +24,11 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import retrofit2.Response
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -41,7 +44,9 @@ class ChatViewModel : ViewModel() {
         Messages(
             has_more_messages = false,
             last_read_message = LastReadMessage("", "", ""),
-            messages = mutableListOf()))
+            messages = mutableListOf()
+        )
+    )
 
     val messages: StateFlow<Messages> = _messages
 
@@ -56,11 +61,11 @@ class ChatViewModel : ViewModel() {
     val chats: StateFlow<Response<DirectChatsResponse>?> = _chats
 
 
-    private val _isTyping = MutableStateFlow<Map<String,Boolean>>(emptyMap())
-     val isTyping :StateFlow<Map<String,Boolean>> =_isTyping
+    private val _isTyping = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    val isTyping: StateFlow<Map<String, Boolean>> = _isTyping
 
-    private val _isStatus = MutableStateFlow<Map<String,Boolean>>(emptyMap())
-    val isStatus :StateFlow<Map<String,Boolean>> =_isStatus
+    private val _isStatus = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    val isStatus: StateFlow<Map<String, Boolean>> = _isStatus
 
 
     init {
@@ -87,18 +92,17 @@ class ChatViewModel : ViewModel() {
                         // Handle user typing logic
                         if (message.type == "user_typing") {
                             _isTyping.value = _isTyping.value.toMutableMap().apply {
-                                put(message.user_guid,true)
+                                put(message.user_guid, true)
                             }
                             GlobalScope.launch {
                                 delay(3000) // Delay for 3 second
                                 _isTyping.value = _isTyping.value.toMutableMap().apply {
-                                    put(message.user_guid,false)
+                                    put(message.user_guid, false)
                                 }
                             }
-                        }
-                        else {
+                        } else {
                             _isTyping.value = _isTyping.value.toMutableMap().apply {
-                                put(message.user_guid,false)
+                                put(message.user_guid, false)
                             }
                         }
                         Log.e("UserTyping", "${message.user_guid} is typing...")
@@ -108,41 +112,26 @@ class ChatViewModel : ViewModel() {
                         // Handle status update logic
                         if (message.status == "online") {
                             _isStatus.value = _isStatus.value.toMutableMap().apply {
-                                put(message.user_guid,true)
+                                put(message.user_guid, true)
                             }
                         } else {
                             _isStatus.value = _isStatus.value.toMutableMap().apply {
-                                put(message.user_guid,false)
+                                put(message.user_guid, false)
                             }
                         }
                         Log.e("StatusMessage", "Status: ${message.status}")
                     }
 
                     is WebSocketMessage.MessageRead -> {
-                        val messageReadEvent = message as WebSocketMessage.MessageRead
-                        viewModelScope.launch {
-                            _messages.update { currentState ->
-                                val updatedMessages = currentState.messages.map { msg ->
-                                    if (msg.chat_guid == messageReadEvent.chat_guid &&
-                                        msg.created_at <= messageReadEvent.last_read_message_created_at.toString()
-                                    ) {
-                                        msg.copy(is_read = true)
-                                    } else {
-                                        msg
-                                    }
-                                }.toMutableList()
-                                currentState.copy(messages = updatedMessages)
-                            }
-                        }
-                        }
+                        handleMessageReadEvent(message)
+
+                    }
 
                     else -> {}
                 }
             }
         }
     }
-
-
 
 
     var isLoading = mutableStateOf(true)
@@ -188,19 +177,41 @@ class ChatViewModel : ViewModel() {
             webSocketEcho.disconnect()
         }
     }
-//    fun sendMessageRead(message: Message) {
+    private fun handleMessageReadEvent(messageReadEvent: WebSocketMessage.MessageRead) {
 //        viewModelScope.launch {
-//            val messageReadEvent = WebSocketMessage.MessageRead(
-//                type = "message_read",
-//                chat_guid = message.chat_guid,
-//                user_guid = message.user_guid, // Implement this method to get the current user's GUID
-//                last_read_message_guid = message.message_guid,
-//                last_read_message_created_at = message.created_at
-//            )
-//            webSocketEcho.send(messageReadEvent)
-//            updateMessageReadStatus(messageReadEvent)
+//            _messages.update { currentMessages ->
+//                val updatedMessages = currentMessages.messages.map { message ->
+//                    if (message.message_guid == messageReadEvent.last_read_message_guid && !message.is_read) {
+//                        message.copy(is_read = true)
+//                    } else {
+//                        message
+//                    }
+//                }
+//
+//                val lastReadMessage = updatedMessages.find { it.message_guid == messageReadEvent.last_read_message_guid && !it.is_read }
+//                currentMessages.copy(
+//                    messages = updatedMessages,
+//                    last_read_message = LastReadMessage(
+//                        guid = messageReadEvent.last_read_message_guid ?: "",
+//                        created_at = messageReadEvent.last_read_message_created_at ?: "",
+//                        content = lastReadMessage?.content ?: "" // Use the content of the found message, or an empty string if not found
+//                    )
+//                )
+//            }
 //        }
-//    }
+    }
+     fun sendMessageReadEvent(
+        chatGuid: String, messageGuid: String
+    ) {
+        val messageReadEvent = JSONObject().apply {
+            put("type", "message_read")
+            put("chat_guid", chatGuid)
+            put("message_guid", messageGuid)
+        }
+
+        webSocketEcho.sendMessage(messageReadEvent.toString())
+    }
+
 
     //chat details we can get it from here like
     fun getDirectChats() {
@@ -234,8 +245,6 @@ class ChatViewModel : ViewModel() {
     }
 
 
-
-
 }
 
 @JsonClass(generateAdapter = true)
@@ -245,13 +254,21 @@ data class SendMessage_Schema(
     val chat_guid: String,
     val content: String,
 )
-fun NewMessagetoMessage(message: WebSocketMessage.NewMessage) :Message{
+
+fun NewMessagetoMessage(message: WebSocketMessage.NewMessage): Message {
     return Message(
         user_guid = message.user_guid,
         chat_guid = message.chat_guid,
         content = message.content,
         created_at = message.created_at,
         is_read = message.is_read,
-        message_guid =message.message_guid
+        message_guid = message.message_guid
     )
 }
+data class MessageReadEvent(
+    val type: String,
+    val user_guid: String,
+    val chat_guid: String,
+    val last_read_message_guid: String,
+    val last_read_message_created_at: String
+)

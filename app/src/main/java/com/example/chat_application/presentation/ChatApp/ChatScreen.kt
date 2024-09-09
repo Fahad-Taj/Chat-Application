@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -77,7 +78,7 @@ fun ChatScreen(
     val messages = viewModel.messages.collectAsState()
     val sender = chat?.users?.find { it.guid == User_Guid }
     val chat_guid = chat?.chat_guid
-    Chat_Guid=chat_guid
+    Chat_Guid = chat_guid
 
     val receiver = chat?.users?.find { it.guid != User_Guid }
 
@@ -122,7 +123,7 @@ fun ChatScreen(
 //                LaunchedEffect(sorted_messages) {
 //                    listState.scrollToItem(sorted_messages.size)
 //                }
-                val listState= rememberLazyListState()
+                val listState = rememberLazyListState()
 
                 LazyColumn(
                     modifier = Modifier
@@ -133,14 +134,20 @@ fun ChatScreen(
                 ) {
                     var last_date = ""
                     val displayFormatterSameYear = DateTimeFormatter.ofPattern("EEEE d MMM")
-                    val displayFormatterDifferentYear = DateTimeFormatter.ofPattern("EEEE d MMM yyyy")
+                    val displayFormatterDifferentYear =
+                        DateTimeFormatter.ofPattern("EEEE d MMM yyyy")
                     val zonedDateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
                     val currentYear = LocalDate.now().year
 
-                    val sorted_messages = messages.value.messages.sortedByDescending { it.created_at }
+                    val sorted_messages =
+                        messages.value.messages.sortedByDescending { it.created_at }
 
                     items(sorted_messages) { message ->
-
+                        if (message.is_read == false) {
+                            viewModel.sendMessageReadEvent(
+                                message.chat_guid, message.message_guid
+                            )
+                        }
                         val isSender: Boolean = message.user_guid == sender?.guid
                         val messageDate =
                             ZonedDateTime.parse(message.created_at, zonedDateTimeFormatter)
@@ -152,8 +159,9 @@ fun ChatScreen(
                             messageDate.format(displayFormatterDifferentYear)
                         }
 
-                        Box(modifier = Modifier
-                            .fillMaxWidth()){
+                        Box(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             if (last_date != formattedDate) {
                                 Text(
                                     text = formattedDate,
@@ -199,9 +207,7 @@ fun ChatScreen(
 
 @Composable
 fun TopBar(
-    user: User,
-    isTyping: Map<String,Boolean>,
-    isActive: Map<String,Boolean>
+    user: User, isTyping: Map<String, Boolean>, isActive: Map<String, Boolean>
 ) {
     Surface(
         modifier = Modifier.shadow(9.dp)
@@ -264,25 +270,18 @@ fun MyDropDown() {
 
     var expanded by remember { mutableStateOf(false) }
 
-    Icon(
-        imageVector = Icons.Default.MoreVert,
+    Icon(imageVector = Icons.Default.MoreVert,
         contentDescription = null,
         modifier = Modifier
             .size(24.dp)
             .clickable {
                 expanded = true
-            }
-    )
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = { expanded = false }
-    ) {
-        DropdownMenuItem(
-            text = { Text("Delete") },
-            onClick = {
-
-                expanded = false
             })
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenuItem(text = { Text("Delete") }, onClick = {
+
+            expanded = false
+        })
     }
 }
 
@@ -364,6 +363,13 @@ fun MessageItem(message: Message, isSender: Boolean) {
         }
         val time = extractTimeFromTimestamp(message.created_at)
         Text(text = time, fontSize = 12.sp)
+        Spacer(modifier = Modifier.width(20.dp))
+        Icon(
+            imageVector = Icons.Default.DoneAll,
+            contentDescription = "Message Read",
+            tint = if (message.is_read) Color.Blue else Color.Gray,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
