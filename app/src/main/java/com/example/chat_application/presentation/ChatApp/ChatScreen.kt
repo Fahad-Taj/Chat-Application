@@ -20,7 +20,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -105,6 +107,7 @@ fun ChatScreen(
         Log.e("demo", chat?.users.toString())
 
     }
+    val listState = rememberLazyListState()
 
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         receiver?.let {
@@ -118,12 +121,10 @@ fun ChatScreen(
 
         when (connectionStatus) {
             "connected" -> {
+                val sorted_messages = messages.value.messages.sortedByDescending { it.created_at }
+                // Automatically scroll to the newest message when new messages are added
 
-                //control the date part and pagination is pending
-//                LaunchedEffect(sorted_messages) {
-//                    listState.scrollToItem(sorted_messages.size)
-//                }
-                val listState = rememberLazyListState()
+
 
                 LazyColumn(
                     modifier = Modifier
@@ -139,19 +140,17 @@ fun ChatScreen(
                     val zonedDateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
                     val currentYear = LocalDate.now().year
 
-                    val sorted_messages =
-                        messages.value.messages.sortedByDescending { it.created_at }
+                    itemsIndexed(sorted_messages) {index, message ->
 
-                    items(sorted_messages) { message ->
-                        if (message.is_read == false) {
-                            viewModel.sendMessageReadEvent(
-                                message.chat_guid, message.message_guid
-                            )
+                        LaunchedEffect(message.message_guid) {
+                            if (!message.is_read) {
+                                viewModel.sendMessageReadEvent(message.chat_guid, message.message_guid)
+                            }
                         }
+
                         val isSender: Boolean = message.user_guid == sender?.guid
                         val messageDate =
                             ZonedDateTime.parse(message.created_at, zonedDateTimeFormatter)
-
                         // Format the date based on whether it's from the current year or not
                         val formattedDate = if (messageDate.year == currentYear) {
                             messageDate.format(displayFormatterSameYear)
@@ -163,16 +162,10 @@ fun ChatScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             if (last_date != formattedDate) {
-                                Text(
-                                    text = formattedDate,
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .fillMaxWidth(),
-                                    textAlign = TextAlign.Center
-                                )
+                                DateSeperator(formattedDate)
                                 last_date = formattedDate
-                                Spacer(modifier = Modifier.height(10.dp))
                             }
+
                             MessageItem(message, isSender)
                         }
                     }
@@ -379,4 +372,19 @@ fun extractTimeFromTimestamp(timestamp: String): String {
     val localDateTime = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault())
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     return localDateTime.format(formatter)
+}
+
+fun LazyListState.isItemVisible(index: Int): Boolean {
+    return this.layoutInfo.visibleItemsInfo.any { it.index == index }
+}
+
+@Composable
+fun DateSeperator(formattedDate:String) {
+    Text(
+        text = formattedDate,
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth(),
+        textAlign = TextAlign.Center
+    )
 }

@@ -14,6 +14,7 @@ import com.example.chat_application.models.Message
 import com.example.chat_application.models.Messages
 import com.example.chat_application.models.OnReceived.WebSocketMessage
 import com.example.chat_application.util.Chat_Guid
+import com.example.chat_application.util.User_Guid
 import com.example.chat_application.util.web_socket
 import com.example.chat_application.websocket.WebSocketClient
 import com.squareup.moshi.JsonClass
@@ -123,7 +124,21 @@ class ChatViewModel : ViewModel() {
                     }
 
                     is WebSocketMessage.MessageRead -> {
-                        handleMessageReadEvent(message)
+                        viewModelScope.launch {
+                            val updatedMessages = _messages.value.messages.map { msg ->
+                                // Check if the message matches chat_guid and user_guid
+                                if (msg.chat_guid == message.chat_guid && msg.message_guid == message.last_read_message_guid && msg.user_guid == message.user_guid) {
+                                    // Only update is_read field
+                                    msg.copy(is_read = true)
+                                } else {
+                                    msg
+                                }
+                            }
+                            _messages.value =
+                                _messages.value.copy(messages = updatedMessages.toMutableList())
+                            Log.e("check me", _messages.value.toString())
+                        }
+
 
                     }
 
@@ -177,30 +192,8 @@ class ChatViewModel : ViewModel() {
             webSocketEcho.disconnect()
         }
     }
-    private fun handleMessageReadEvent(messageReadEvent: WebSocketMessage.MessageRead) {
-//        viewModelScope.launch {
-//            _messages.update { currentMessages ->
-//                val updatedMessages = currentMessages.messages.map { message ->
-//                    if (message.message_guid == messageReadEvent.last_read_message_guid && !message.is_read) {
-//                        message.copy(is_read = true)
-//                    } else {
-//                        message
-//                    }
-//                }
-//
-//                val lastReadMessage = updatedMessages.find { it.message_guid == messageReadEvent.last_read_message_guid && !it.is_read }
-//                currentMessages.copy(
-//                    messages = updatedMessages,
-//                    last_read_message = LastReadMessage(
-//                        guid = messageReadEvent.last_read_message_guid ?: "",
-//                        created_at = messageReadEvent.last_read_message_created_at ?: "",
-//                        content = lastReadMessage?.content ?: "" // Use the content of the found message, or an empty string if not found
-//                    )
-//                )
-//            }
-//        }
-    }
-     fun sendMessageReadEvent(
+
+    fun sendMessageReadEvent(
         chatGuid: String, messageGuid: String
     ) {
         val messageReadEvent = JSONObject().apply {
@@ -208,7 +201,6 @@ class ChatViewModel : ViewModel() {
             put("chat_guid", chatGuid)
             put("message_guid", messageGuid)
         }
-
         webSocketEcho.sendMessage(messageReadEvent.toString())
     }
 
@@ -265,6 +257,7 @@ fun NewMessagetoMessage(message: WebSocketMessage.NewMessage): Message {
         message_guid = message.message_guid
     )
 }
+
 data class MessageReadEvent(
     val type: String,
     val user_guid: String,

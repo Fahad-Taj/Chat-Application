@@ -67,28 +67,28 @@ class WebSocketClient() {
                         val newMessage =
                             moshi.adapter(WebSocketMessage.NewMessage::class.java).fromJson(text)!!
                         _receivedMessages.value = newMessage
-                        Log.e("receivedMessage", _receivedMessages.value.toString())
+                        Log.e("newreceivedMessage", _receivedMessages.value.toString())
                     }
 
                     "user_typing" -> {
                         val userTyping =
                             moshi.adapter(WebSocketMessage.UserTyping::class.java).fromJson(text)!!
                         _receivedMessages.value = userTyping
-                        Log.e("receivedMessage", _receivedMessages.value.toString())
+                        Log.e("userreceivedMessage", _receivedMessages.value.toString())
                     }
 
                     "status" -> {
                         val status = moshi.adapter(WebSocketMessage.StatusMessage::class.java)
                             .fromJson(text)!!
                         _receivedMessages.value = status
-                        Log.e("receivedMessage", _receivedMessages.value.toString())
+                        Log.e("statusreceivedMessage", _receivedMessages.value.toString())
                     }
 
                     "message_read" -> {
                         val message_read =
                             moshi.adapter(WebSocketMessage.MessageRead::class.java).fromJson(text)!!
                         _receivedMessages.value = message_read
-                        Log.e("receivedMessage", _receivedMessages.value.toString())
+                        Log.e("readreceivedMessage", _receivedMessages.value.toString())
                     }
                 }
 //                Log.e("Received",_receivedMessages.value)
