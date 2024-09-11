@@ -1,4 +1,4 @@
-package com.example.redchat.presentation.main
+package com.example.redchat.presentation.main.main_screen
 
 import android.content.Context
 import android.widget.Toast
@@ -7,16 +7,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.redchat.api.RetrofitInstance
 import com.example.redchat.api.access_token
+import com.example.redchat.models.Data
+import com.example.redchat.models.Friend
 import com.example.redchat.models.SendFriendRequestRequest
+import com.example.redchat.presentation.main.MainViewModel
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class FriendRequestViewmodel: ViewModel() {
+class FriendRequestViewmodel(viewModel: MainViewModel): ViewModel() {
 
     var isLoading = mutableStateOf(false)
 
     // Function to accept a friend request
-    fun acceptFriendRequest(viewModel: MainScreenViewmodel,username: String, context: Context){
+    fun acceptFriendRequest(viewModel: MainViewModel, username: String, context: Context){
         if(!isLoading.value){
             viewModelScope.launch {
                 try {
@@ -24,6 +27,15 @@ class FriendRequestViewmodel: ViewModel() {
                     val bearerToken = "Bearer $access_token"
                     val result = RetrofitInstance.api.acceptFriendRequest(bearerToken,SendFriendRequestRequest(username = username))
                     if(result.isSuccessful){
+                        val friend = result.body()?.data?.let {
+                            Friend(
+                                UID = it.UID,
+                                conversationId = it.conversationId,
+                                username = it.username,
+                                photo = it.photo
+                            )
+                        }
+                        viewModel.user.friends.add(friend!!)
                         viewModel.user.friendRequests.removeIf { it.user.username == username }
                         Toast.makeText(context, "Friend request accepted", Toast.LENGTH_SHORT).show()
                     } else {
@@ -41,7 +53,7 @@ class FriendRequestViewmodel: ViewModel() {
     }
 
     // Function to reject a friend request
-    fun rejectFriendRequest(viewModel: MainScreenViewmodel,username: String, context: Context){
+    fun rejectFriendRequest(viewModel: MainViewModel, username: String, context: Context){
         if(!isLoading.value){
             viewModelScope.launch {
                 try {

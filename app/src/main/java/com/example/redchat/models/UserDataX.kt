@@ -5,7 +5,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 
 data class UserDataX(
     val friendRequests: SnapshotStateList<FriendRequest> = mutableStateListOf(),
-    val friends: List<Friend>,
+    val friends: SnapshotStateList<Friend> = mutableStateListOf(),
     val userId: String,
     val username: String
 )

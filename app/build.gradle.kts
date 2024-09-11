@@ -127,4 +127,7 @@ dependencies {
 
     // Gson
     implementation ("com.google.code.gson:gson:2.8.8")
+
+    // Paging 3 library
+    implementation ("androidx.paging:paging-runtime:3.1.1")
 }

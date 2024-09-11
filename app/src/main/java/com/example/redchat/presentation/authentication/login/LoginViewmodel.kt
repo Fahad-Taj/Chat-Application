@@ -10,6 +10,7 @@ import com.example.redchat.api.access_token
 import com.example.redchat.api.userFromReq
 import com.example.redchat.models.LoginRequest
 import com.example.redchat.models.LoginResponse
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -26,7 +27,7 @@ class LoginViewmodel: ViewModel() {
     var isLoading = mutableStateOf(false)
 
     fun login(context: Context){
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 isLoading.value = true
                 val loginRequest = LoginRequest(
@@ -45,6 +46,7 @@ class LoginViewmodel: ViewModel() {
                 isLoading.value = false
 
             } catch(e: Exception){
+                isLoading.value = false
                 e.printStackTrace()
             }
         }

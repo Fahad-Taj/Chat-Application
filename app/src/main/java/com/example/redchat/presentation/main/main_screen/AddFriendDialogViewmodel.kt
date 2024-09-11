@@ -1,4 +1,4 @@
-package com.example.redchat.presentation.main
+package com.example.redchat.presentation.main.main_screen
 
 import android.content.Context
 import android.widget.Toast

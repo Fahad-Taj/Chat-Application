@@ -3,6 +3,8 @@ package com.example.redchat.websocket
 import android.util.Log
 import io.socket.client.IO
 import io.socket.client.Socket
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.net.URISyntaxException
 
 object SocketHandler {
@@ -17,7 +19,7 @@ object SocketHandler {
 // If you want to use your physical phone you could use your ip address plus :3000
 // This will allow your Android Emulator and physical device at your home to connect to the server
 
-            mSocket = IO.socket("https://project-x-6666.onrender.com?userId=$userId&username=$username")
+            mSocket = IO.socket("https://redchat.azurewebsites.net?userId=66d59ee7ee65ed579f9668c9&username=fahad")
         } catch (e: URISyntaxException) {
             Log.e("SocketHandler", "Error setting socket: ${e.message}")
         }
@@ -29,13 +31,9 @@ object SocketHandler {
     }
 
     @Synchronized
-    fun establishConnection() {
+    fun establishConnection(): Boolean {
         mSocket.connect()
-        if (mSocket.connected()) {
-            Log.d("SocketHandler", "WebSocket connected")
-        } else {
-            Log.e("SocketHandler", "WebSocket not connected")
-        }
+        return mSocket.connected()
     }
 
     @Synchronized

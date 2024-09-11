@@ -142,7 +142,7 @@ fun ImageUploader(
 
     LaunchedEffect(key1 = response) {
         response?.let {
-            navController.navigate(MainGraphRoutes.MainScreen.route)
+            navController.navigate("main_nav_graph")
         }
     }
 
