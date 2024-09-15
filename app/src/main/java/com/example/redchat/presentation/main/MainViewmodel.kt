@@ -102,6 +102,8 @@ class MainViewModel : ViewModel() {
                         user.friends.add(friend)
                     }
 
+
+
                     // Connect the socket
                     connect()
 

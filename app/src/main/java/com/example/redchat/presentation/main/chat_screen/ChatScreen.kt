@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
@@ -31,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +61,16 @@ fun ChatScreen(
     val chatViewmodel: ChatViewmodel = remember { ChatViewmodel(viewModel) } // Use remember to retain state across recompositions
     val messages by remember { mutableStateOf(chatViewmodel.messages) } // Listen to changes in messages
     val items = chatViewmodel.items?.collectAsLazyPagingItems()
+    val listState = rememberLazyListState()
+
+    // LaunchedEffect to handle scroll position when messages change
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            // Scroll to the bottom (which is index 0 due to reverseLayout)
+            listState.animateScrollToItem(0)
+        }
+    }
+
     DisposableEffect(Unit) {
         chatViewmodel.listenToEvent("receiveMessage")
 
@@ -85,26 +97,32 @@ fun ChatScreen(
                 .padding(it)
                 .fillMaxSize()
                 .background(Color.LightGray)
-                .padding(horizontal = 15.dp)
-
+                .padding(horizontal = 15.dp),
+            reverseLayout = true,  // Change this back to true
+            verticalArrangement = Arrangement.Bottom,  // Add this line
+            state = listState
         ) {
-
-            if (items != null) {
-                items(items.itemCount) { item ->
-                    item.let {
-                        items[it]?.let { it1 ->
-                            Spacer(modifier = Modifier.height(10.dp))
-                            SecondMessageItem(it1, viewModel.user.userId)
-                            Spacer(modifier = Modifier.height(10.dp))
-                        }
-                    }
-                }
-            }
-
             items(messages) { message ->
                 Spacer(modifier = Modifier.height(10.dp))
                 MessageItem(message, viewModel.user.userId)
                 Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            if (items != null) {
+                items(items.itemCount) { index ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    items[index]?.let { it1 -> SecondMessageItem(it1, viewModel.user.userId) }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+            }
+        }
+
+// Scroll to the bottom when a new message is added
+        // Scroll to the bottom when a new message is added
+        // Scroll to the bottom when a new message is added
+        LaunchedEffect(messages.size) {
+            if (messages.isNotEmpty()) {
+                listState.animateScrollToItem(0)  // Scroll to the first item (bottom in reversed layout)
             }
         }
     }

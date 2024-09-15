@@ -22,7 +22,7 @@ import org.json.JSONObject
 
 class ChatViewmodel(private val viewModel: MainViewModel): ViewModel() {
 
-    private val _received_message = mutableStateListOf<Message>()
+    private var _received_message = mutableStateListOf<Message>()
     val messages: List<Message> get() = _received_message
 
     var message = mutableStateOf("")
@@ -66,11 +66,18 @@ class ChatViewmodel(private val viewModel: MainViewModel): ViewModel() {
 
     fun sendMessage(){
         println("Send message triggered")
-        _received_message.add(Message(
+
+        // Append the new message to the end of the list
+        _received_message.add(0, Message(
             contentType = "text",
             content = message.value,
             senderId = user.userId
         ))
+
+        // Clear the input field
+        message.value = ""
+
+
         val sendMessage = SendMessage(
             conversationId = friend?.conversationId ?: "None",
             message = MessageX(
