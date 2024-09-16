@@ -218,6 +218,7 @@ fun BottomBar(viewModel: ChatViewmodel){
             value = viewModel.message.value,
             onValueChange = {
                 viewModel.message.value = it
+                viewModel.emitUserTyping()
             })
         Spacer(modifier = Modifier.width(20.dp))
 

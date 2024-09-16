@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.navigation.NavHostController
 import androidx.compose.ui.Modifier
@@ -44,6 +48,7 @@ import com.example.redchat.models.Friend
 import com.example.redchat.presentation.main.MainGraphRoutes
 import com.example.redchat.presentation.main.MainViewModel
 import com.example.redchat.presentation.main.SocketEvent
+import kotlin.reflect.typeOf
 
 @Composable
 fun MainScreen(
@@ -119,6 +124,8 @@ fun FriendCard(
     friend: Friend,
     navController: NavHostController
 ){
+    val isOnline by friend.isOnlineState
+
     Spacer(modifier = Modifier.height(10.dp))
 
     Row(
@@ -157,6 +164,18 @@ fun FriendCard(
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold
         )
+        Spacer(modifier = Modifier.width(15.dp))
+        Column {
+            println(println(friend::class))
+            if (isOnline) {
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .background(Color.Green)
+                        .clip(CircleShape)
+                )
+            }
+        }
     }
 
     Spacer(modifier = Modifier.height(10.dp))

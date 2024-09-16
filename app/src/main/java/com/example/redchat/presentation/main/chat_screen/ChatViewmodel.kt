@@ -64,6 +64,12 @@ class ChatViewmodel(private val viewModel: MainViewModel): ViewModel() {
         }
     }
 
+    fun emitUserTyping(){
+        val json = JSONObject()
+        json.put("typing", true)
+        viewModel.socket?.emit("userTyping", json)
+    }
+
     fun sendMessage(){
         println("Send message triggered")
 

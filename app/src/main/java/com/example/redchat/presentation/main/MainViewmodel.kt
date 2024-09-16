@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.redchat.api.userFromReq
 import com.example.redchat.models.Friend
 import com.example.redchat.models.FriendRequest
+import com.example.redchat.models.FriendStatus
 import com.example.redchat.models.User
 import com.example.redchat.models.UserData
 import com.example.redchat.models.UserDataX
@@ -56,7 +57,6 @@ class MainViewModel : ViewModel() {
     private suspend fun initializeSocket() {
         viewModelScope.launch {
             try{
-
                 socket = IO.socket("https://redchat.azurewebsites.net?userId=${user.userId}&username=${user.username}")
                 println(socket.toString())
                 socket?.apply {
@@ -100,6 +100,22 @@ class MainViewModel : ViewModel() {
                         val gson = Gson()
                         val friend = gson.fromJson(it[0].toString(), Friend::class.java)
                         user.friends.add(friend)
+                    }
+                    on("friendStatus") { payload ->
+                        println("Friend status changed: $payload")
+                        try {
+                            val gson = Gson()
+                            val friendStatus = gson.fromJson(payload[0].toString(), FriendStatus::class.java)
+                            println("Parsed friend status: $friendStatus")
+
+                            user.friends.find { it.UID == friendStatus.userId }?.let { friend ->
+                                println(friendStatus.online::class)
+                                friend.isOnline = friendStatus.online
+                                println("Updated online status for user ${friendStatus.userId} to ${friendStatus.online}")
+                            } ?: println("Friend with ID ${friendStatus.userId} not found")
+                        } catch (e: Exception) {
+                            println("Error parsing friend status: ${e.message}")
+                        }
                     }
 
 
