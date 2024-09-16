@@ -45,12 +45,16 @@ import com.example.chat_application.R
 import com.example.chat_application.models.GetAllUsers.GetAllUsersItem
 import com.example.chat_application.presentation.ChatApp.AllChat.ChatViewModel
 import com.example.chat_application.presentation.ChatApp.AllChat.SingleUserRow
+import com.example.chat_application.presentation.ChatApp.ChatRoutes
 import com.example.chat_application.util.baseUrl
 import org.jetbrains.annotations.Async
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun RequestedChatsComposable(navController: NavHostController) {
+fun RequestedChatsComposable(
+    rootViewModel: ChatViewModel,
+    navController: NavHostController
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -58,7 +62,7 @@ fun RequestedChatsComposable(navController: NavHostController) {
     ) {
         val viewModel: RequestedChatVideModel = viewModel()
         val allUsers by viewModel.allUsers.collectAsState()
-        val ChatviewModel: ChatViewModel=viewModel()
+
 
         Scaffold(
             topBar = {
@@ -70,7 +74,7 @@ fun RequestedChatsComposable(navController: NavHostController) {
                 .padding(paddingvalues)) {
                 items(allUsers.size) {index ->
                     val user = allUsers[index]
-                    UserRow(user, navController = navController, viewModel = ChatviewModel)
+                    UserRow(user, navController = navController, viewModel = rootViewModel)
                     Spacer(modifier = Modifier.height(5.dp))
                 }
             }
@@ -92,6 +96,7 @@ fun RequestedChatsComposable(navController: NavHostController) {
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun UserRow(user: GetAllUsersItem,navController: NavHostController,viewModel: ChatViewModel) {
     Card(modifier = Modifier.border(2.dp,Color.Black, shape = RectangleShape)){
@@ -99,7 +104,7 @@ fun UserRow(user: GetAllUsersItem,navController: NavHostController,viewModel: Ch
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
-                .clickable { /* Handle onClick */ }
+                .clickable { viewModel.createDirectChat(navController, user.guid) }
         ) {
             // User Image
             if (user.user_image != null) {

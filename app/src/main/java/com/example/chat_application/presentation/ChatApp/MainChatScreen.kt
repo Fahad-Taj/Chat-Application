@@ -119,7 +119,7 @@ fun MainChatScreen(MainNavController: NavHostController) {
                             .height(80.dp)
                             .wrapContentSize(Alignment.Center)
                             .clickable { navController.navigate(ChatRoutes.AllChats.route) },
-                        text = if(Unread_Message_Count>0) "ALl ${Unread_Message_Count}" else "ALL",
+                        text = if(Unread_Message_Count>0) "Your Chat$ ${Unread_Message_Count}" else "Your Chats",
                         textDecoration = if (selectedAll) TextDecoration.Underline else TextDecoration.None
                     )
 
@@ -131,7 +131,7 @@ fun MainChatScreen(MainNavController: NavHostController) {
                             .height(80.dp)
                             .wrapContentSize(Alignment.Center)
                             .clickable { navController.navigate(ChatRoutes.RequestedChats.route) },
-                        text = "Requested",
+                        text = "All Users",
                         textDecoration = if (selectedRequested) TextDecoration.Underline else TextDecoration.None
                     )
                 }

@@ -131,6 +131,7 @@ fun ChatScreen(
                         .padding(paddingValues)
                         .background(Color(0xffD3D3D3)),
                     reverseLayout = true,
+
                     state = listState
                 ) {
                     var last_date = ""
@@ -158,9 +159,10 @@ fun ChatScreen(
                             messageDate.format(displayFormatterDifferentYear)
                         }
 
-                        Box(
+                        Column(
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            println(last_date + " " + formattedDate)
                             if (last_date != formattedDate) {
                                 DateSeperator(formattedDate)
                                 last_date = formattedDate
@@ -208,18 +210,19 @@ fun TopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
-                .padding(10.dp)
-                .wrapContentHeight(Alignment.CenterVertically)
+                .height(65.dp)
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(45.dp)
+                    .size(65.dp)
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    modifier = Modifier,
+                    modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.Filled.AccountCircle,
                     contentDescription = null,
                     tint = Color.Black
@@ -232,7 +235,7 @@ fun TopBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = user.username, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(text = user.username, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     if (isTyping[user.guid] == true) {
                         Text(
                             text = "is Typing ...", color = Color(0xff2F6030), fontSize = 10.sp
@@ -324,8 +327,9 @@ fun BottomBar(viewModel: ChatViewModel, user_guid: String, chatGuid: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TopBarPreview() {
+    val isActive: Map<String, Boolean> = mapOf("guid" to true)
 //    ChatScreen(viewModel = ChatViewModel(), navController = rememberNavController())
-//    TopBar(user = User("ddd", "dddd", "ddddd", "null", "dddddddd"), true, true)
+    TopBar(user = User("ddd", "dddd", "ddddd", "null", "dddddddd"), isActive, isActive)
 //    BottomBar(viewModel = ChatViewModel(), user_guid = "sscsjfnd", chatGuid = "jdjdj")
 }
 
@@ -354,9 +358,10 @@ fun MessageItem(message: Message, isSender: Boolean) {
                     .clip(RoundedCornerShape(8.dp)) // Align the text based on sender or receiver
             )
         }
+        Spacer(modifier = Modifier.width(6.dp))
         val time = extractTimeFromTimestamp(message.created_at)
         Text(text = time, fontSize = 12.sp)
-        Spacer(modifier = Modifier.width(20.dp))
+        Spacer(modifier = Modifier.width(6.dp))
         Icon(
             imageVector = Icons.Default.DoneAll,
             contentDescription = "Message Read",

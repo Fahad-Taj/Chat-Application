@@ -19,7 +19,7 @@ fun ChatGraph(
 
     NavHost(navController = navController, startDestination = ChatRoutes.AllChats.route) {
         composable(ChatRoutes.AllChats.route){ AllChatsComposable(navController = navController, viewModel = chatViewModel) }
-        composable(ChatRoutes.RequestedChats.route){ RequestedChatsComposable(navController = navController) }
+        composable(ChatRoutes.RequestedChats.route){ RequestedChatsComposable(navController = navController, rootViewModel = chatViewModel) }
         composable(ChatRoutes.ChatScreen.route) { ChatScreen(navController = navController, viewModel = chatViewModel) }
     }
 }

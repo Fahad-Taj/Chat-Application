@@ -1,6 +1,7 @@
 package com.example.chat_application.presentation.Authentication.signup
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +17,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 class SignupViewmodel: ViewModel() {
 
@@ -33,6 +37,8 @@ class SignupViewmodel: ViewModel() {
     val lastName = mutableStateOf("")
 
     var isWaiting = mutableStateOf(false)
+
+    var uri = mutableStateOf<Uri?>(null)
 
     fun checkInternetConnection(context: Context, lifecycleOwner: LifecycleOwner){
         viewModelScope.launch {
@@ -69,9 +75,25 @@ class SignupViewmodel: ViewModel() {
 
                 isWaiting.value = false
             } catch(e: Exception){
+                isWaiting.value = false
                 e.printStackTrace()
             }
         }
+    }
+
+    fun uriToFile(uri: Uri, context: Context): File? {
+        val contentResolver = context.contentResolver
+        val tempFile = File.createTempFile("temp_image", ".jpg", context.cacheDir)
+        val inputStream: InputStream? = contentResolver.openInputStream(uri)
+        val outputStream = FileOutputStream(tempFile)
+
+        inputStream?.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        return tempFile
     }
 
 }

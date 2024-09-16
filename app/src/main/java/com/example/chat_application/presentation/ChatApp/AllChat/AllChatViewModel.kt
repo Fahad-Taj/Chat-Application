@@ -6,13 +6,16 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavHostController
 import com.example.chat_application.api.RetrofitInstance
 import com.example.chat_application.models.Chat
+import com.example.chat_application.models.CreateDirectChat.CreateDirectChatRequest
 import com.example.chat_application.models.DirectChatsResponse
 import com.example.chat_application.models.LastReadMessage
 import com.example.chat_application.models.Message
 import com.example.chat_application.models.Messages
 import com.example.chat_application.models.OnReceived.WebSocketMessage
+import com.example.chat_application.presentation.ChatApp.ChatRoutes
 import com.example.chat_application.util.Chat_Guid
 import com.example.chat_application.util.User_Guid
 import com.example.chat_application.util.web_socket
@@ -233,6 +236,36 @@ class ChatViewModel : ViewModel() {
             } else {
                 Log.e("WebSocket", "Failed to send message")
             }
+        }
+    }
+
+
+    fun createDirectChat(
+        navController: NavHostController,
+        recipient_user_guid:String
+    ){
+        viewModelScope.launch {
+            try{
+                val request = CreateDirectChatRequest(recipient_user_guid)
+                val response = RetrofitInstance.api.createDirectChat(request)
+                if(response.isSuccessful){
+                    val response_body = response.body()
+                    val chat = Chat(
+                        chat_guid = response_body?.guid!!,
+                        chat_type = response_body.chat_type,
+                        created_at = response_body.created_at,
+                        new_messages_count = 0,
+                        updated_at = response_body.updated_at,
+                        users = response_body.users
+                    )
+                    selectedScreen = chat
+                    navController.navigate(ChatRoutes.ChatScreen.route)
+
+                }
+            }   catch(e: Exception){
+                e.printStackTrace()
+            }
+
         }
     }
 
