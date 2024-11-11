@@ -1,6 +1,7 @@
 package com.example.redchat.models
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 
 data class Friend(
@@ -10,7 +11,4 @@ data class Friend(
     val username: String,
     var isOnline: Boolean = false,
     var isTyping: Boolean = false
-) {
-    val isOnlineState: MutableState<Boolean> = mutableStateOf(isOnline)
-    val isTypingState: MutableState<Boolean> = mutableStateOf(isTyping)
-}
+)

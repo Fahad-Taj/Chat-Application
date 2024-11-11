@@ -110,7 +110,7 @@ class MainViewModel : ViewModel() {
 
                             user.friends.find { it.UID == friendStatus.userId }?.let { friend ->
                                 println(friendStatus.online::class)
-                                friend.isOnline = friendStatus.online
+                                friend.isOnline = (friendStatus.online)
                                 println("Updated online status for user ${friendStatus.userId} to ${friendStatus.online}")
                             } ?: println("Friend with ID ${friendStatus.userId} not found")
                         } catch (e: Exception) {

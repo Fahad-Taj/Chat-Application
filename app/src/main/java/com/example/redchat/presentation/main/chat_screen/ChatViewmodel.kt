@@ -80,8 +80,7 @@ class ChatViewmodel(private val viewModel: MainViewModel): ViewModel() {
             senderId = user.userId
         ))
 
-        // Clear the input field
-        message.value = ""
+
 
 
         val sendMessage = SendMessage(
@@ -92,6 +91,9 @@ class ChatViewmodel(private val viewModel: MainViewModel): ViewModel() {
                 senderId = user.userId
             )
         )
+
+        // Clear the input field
+        message.value = ""
 
         var jsonObject: JSONObject = JSONObject()
 

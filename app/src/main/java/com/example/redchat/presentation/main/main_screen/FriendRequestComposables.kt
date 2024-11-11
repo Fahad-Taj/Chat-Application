@@ -53,10 +53,11 @@ fun AcceptFriendRequestDialog(viewModel: MainViewModel){
     var openFriendReqDialog by remember { mutableStateOf(false) }
     var openAddFriendDialog by remember { mutableStateOf(false) }
     val friendReqList = viewModel.user.friendRequests
-
+    println("Entered AcceptFriendRequestDialog")
     Row(
 
     ) {
+        println("Row Entered")
         Icon(
             modifier = Modifier
                 .size(35.dp)

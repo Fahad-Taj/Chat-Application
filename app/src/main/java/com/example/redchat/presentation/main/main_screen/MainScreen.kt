@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+//import androidx.compose.material.Scaffold
+//import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -91,10 +93,12 @@ fun MainScreen(
             .navigationBarsPadding()
             .fillMaxSize(),
         topBar = {
+            println("TopBar Entered")
             // Top-Bar Composable, it will be displayed on the top of the screen
             TopBar(viewModel = viewModel)
         },
     ) {
+        println("Scaffold Entered!")
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,9 +107,9 @@ fun MainScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
 
-            viewModel.user.friends.forEach {
+            viewModel.user.friends.forEach {friend->
                 FriendCard(
-                    friend = it,
+                    friend = friend,
                     viewModel = viewModel,
                     navController = navController
                 )
@@ -124,7 +128,12 @@ fun FriendCard(
     friend: Friend,
     navController: NavHostController
 ){
-    val isOnline by friend.isOnlineState
+    var isOnline by remember { mutableStateOf(friend.isOnline)  }
+
+    // Effect to update the remembered state when friend.isOnline changes
+    LaunchedEffect(friend.isOnline) {
+        isOnline = friend.isOnline
+    }
 
     Spacer(modifier = Modifier.height(10.dp))
 
@@ -186,6 +195,7 @@ fun TopBar(viewModel: MainViewModel){
     Column(
         modifier = Modifier.padding(top = 18.dp)
     ) {
+        println("Top Bar implementation entered")
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -199,6 +209,7 @@ fun TopBar(viewModel: MainViewModel){
                 letterSpacing = 1.2.sp,
                 color = Color(0xffFF4500)
             )
+            println("After REDCHAT Text")
             Spacer(modifier = Modifier.width(20.dp))
 
             AcceptFriendRequestDialog(viewModel = viewModel)
