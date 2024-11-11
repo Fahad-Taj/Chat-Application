@@ -5,6 +5,7 @@ import android.widget.Space
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -208,11 +209,11 @@ fun TopChatBar(friend: Friend?){
 
 @Composable
 fun BottomBar(viewModel: ChatViewmodel){
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(20.dp),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         OutlinedTextField(
             value = viewModel.message.value,
@@ -220,7 +221,7 @@ fun BottomBar(viewModel: ChatViewmodel){
                 viewModel.message.value = it
                 viewModel.emitUserTyping()
             })
-        Spacer(modifier = Modifier.width(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Button(onClick = {
             viewModel.sendMessage()

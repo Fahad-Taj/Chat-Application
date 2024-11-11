@@ -52,7 +52,7 @@ class ChatViewmodel(private val viewModel: MainViewModel): ViewModel() {
             viewModelScope.launch {
                 var jsonObject: JSONObject = JSONObject()
                 jsonObject = JSONObject(it[0].toString())
-                _received_message.add(
+                _received_message.add(0,
                     Message(
                         content = jsonObject.getString("content"),
                         contentType = jsonObject.getString("contentType"),
