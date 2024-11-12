@@ -62,7 +62,7 @@ fun AcceptFriendRequestDialog(viewModel: MainViewModel){
             modifier = Modifier
                 .size(35.dp)
                 .clickable { openFriendReqDialog = true },
-            imageVector = Icons.Default.AddCircle,
+            imageVector = Icons.Default.CheckCircle,
             contentDescription = null
         )
 
@@ -70,7 +70,7 @@ fun AcceptFriendRequestDialog(viewModel: MainViewModel){
             modifier = Modifier
                 .size(35.dp)
                 .clickable { openAddFriendDialog = true },
-            imageVector = Icons.Default.CheckCircle,
+            imageVector = Icons.Default.AddCircle,
             contentDescription = null
         )
     }

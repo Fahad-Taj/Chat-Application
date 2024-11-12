@@ -212,7 +212,7 @@ fun BottomBar(viewModel: ChatViewmodel){
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(20.dp),
+            .padding(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         OutlinedTextField(
